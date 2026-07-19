@@ -1,0 +1,38 @@
+# ── モデル・ビルド成果物（サイズ大／自動生成のため管理対象外）──
+models/
+models_*/
+dist/
+dist*/
+build/
+_internal/
+*.exe
+
+# ── 実行時に生成されるもの ──
+辞書.txt          # 起動時に既定テンプレが自動生成される（固有名詞を含みうるため除外）
+会議録音/          # 録音した会議音声
+*.wav
+*.srt
+*_文字起こし.*
+*.docx
+*.xlsx
+logs/
+*.log
+
+# ── Python / venv ──
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+build_env/
+new_env/
+env/
+
+# ── OS / エディタ ──
+Thumbs.db
+Desktop.ini
+.DS_Store
+.vscode/
+.idea/
+
+icon_preview.png
