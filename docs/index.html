@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ROCK ON MJ｜録音と文字起こしを、このPCだけで。Windows用の無料ツール</title>
+<meta name="description" content="Web会議の音声を録音して、そのまま文字起こし。インターネットに接続せず、すべてPCの中だけで処理します。テキスト・字幕・Word・Excelで書き出し。MIT License のオープンソース。">
+<meta property="og:title" content="ROCK ON MJ｜録音と文字起こしを、このPCだけで。">
+<meta property="og:description" content="Web会議の音声を録音して、そのまま文字起こし。すべてPCの中だけで処理します。MIT License。">
+<meta property="og:type" content="website">
+<link rel="icon" href="assets/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;650;700;750&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+
+<header class="header">
+  <div class="wrap header-inner">
+    <a class="brand" href="#top"><img src="assets/icon.png" alt=""> ROCK ON MJ</a>
+    <nav class="nav">
+      <a href="#features">できること</a>
+      <a href="#how">仕組み</a>
+      <a href="#build">使いはじめる</a>
+      <a href="#faq">よくある質問</a>
+      <a class="btn btn-main" href="https://github.com/pikaring/rock-on-mj">GitHubで見る</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div>
+        <span class="pill"><b>MIT License</b> · オープンソース</span>
+        <h1>録音して、文字起こす。<br>ぜんぶ、このPCで。</h1>
+        <p class="lead">Web会議の音声をそのまま録音して、終わったら文字起こし。
+          インターネットにつながっていなくても動きます。音声も文字も、PCの外には出ません。</p>
+        <div class="hero-actions">
+          <a class="btn btn-main" href="https://github.com/pikaring/rock-on-mj">GitHubで見る</a>
+          <a class="btn btn-sub" href="#build">ビルド手順</a>
+        </div>
+        <p class="hero-note">Windows 10 / 11（64bit）・メモリ8GB以上を推奨 ／ 実行ファイルは配布していません（各自ビルド）</p>
+      </div>
+
+      <div class="mock" aria-hidden="true">
+        <div class="mock-bar">
+          <i class="dot"></i><i class="dot"></i><i class="dot"></i>
+          <span class="mock-title">ROCK ON MJ</span>
+        </div>
+        <div class="mock-body">
+          <div class="wave">
+            <i style="height:24%"></i><i style="height:52%"></i><i style="height:88%"></i><i style="height:40%"></i>
+            <i style="height:70%"></i><i style="height:96%"></i><i style="height:34%"></i><i style="height:60%"></i>
+            <i style="height:80%"></i><i style="height:28%"></i><i style="height:66%"></i><i style="height:44%"></i>
+            <i style="height:92%"></i><i style="height:36%"></i><i style="height:58%"></i><i style="height:22%"></i>
+            <i style="height:74%"></i><i style="height:48%"></i><i style="height:84%"></i><i style="height:30%"></i>
+          </div>
+          <div class="bar"><i></i></div>
+          <div class="bar-label"><span>文字起こし中… 62%</span><span>残り約 14分30秒</span></div>
+          <div class="lines">
+            <div><span>00:12</span>それでは，先ほどの件から始めます</div>
+            <div><span>00:19</span>資料の3ページをご覧ください</div>
+            <div><span>00:27</span>来月の実施でよろしいでしょうか <span class="flag">※要確認</span></div>
+            <div><span>00:35</span>はい，その方向で進めます</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="specs">
+    <div class="wrap specs-grid">
+      <div class="spec"><b>ネット接続なしで動く</b><span>通信するのはモデル取得のときだけ</span></div>
+      <div class="spec"><b>会員登録なし・無料</b><span>MIT License のオープンソース</span></div>
+      <div class="spec"><b>相手の声を録音</b><span>ドライバも管理者権限も不要</span></div>
+      <div class="spec"><b>4つの形式で保存</b><span>テキスト／字幕／Word／Excel</span></div>
+    </div>
+  </div>
+
+  <section id="features">
+    <div class="wrap">
+      <div class="sec-head">
+        <p class="eyebrow">01 — FEATURES</p>
+        <h2>会議のあとの、<br>いちばん面倒なところを。</h2>
+        <p>録音ファイルを探して、別のソフトに読み込ませて、聞き直しながら打ち直す。
+          その一連を、ひとつのウィンドウで終わらせます。</p>
+      </div>
+
+      <div class="cards">
+        <div class="card">
+          <p class="num">01</p>
+          <h3>録音する</h3>
+          <p>Web会議で相手の声が聞こえていれば、そのまま録音できます。</p>
+          <ul>
+            <li>スピーカーやヘッドセットに流れる音を録音（WASAPIループバック）</li>
+            <li>録音しながら随時保存。途中で落ちてもそこまでは残る</li>
+            <li>デバイスエラー時は最大5回まで自動で録り直しを試みる</li>
+          </ul>
+        </div>
+        <div class="card">
+          <p class="num">02</p>
+          <h3>文字起こす</h3>
+          <p>録音を止めると、そのまま文字起こしが始まります。</p>
+          <ul>
+            <li>Whisper（large-v3-turbo）をローカルで実行</li>
+            <li>手持ちの音声・動画ファイルも可（WAV / M4A / MP3 / FLAC / MP4）</li>
+            <li>残り時間つきの進捗表示</li>
+          </ul>
+        </div>
+        <div class="card">
+          <p class="num">03</p>
+          <h3>書き出す</h3>
+          <p>用途に合わせて、必要な形式にまとめて保存します。</p>
+          <ul>
+            <li>テキスト（全文＋タイムスタンプ付き）</li>
+            <li>字幕（SRT）・Word（docx）・Excel（xlsx）</li>
+            <li>自信の低い箇所には「※要確認」を付与（Excelは黄色で塗り）</li>
+          </ul>
+        </div>
+        <div class="card">
+          <p class="num">04</p>
+          <h3>精度を上げる</h3>
+          <p>固有名詞は、辞書に書き足すだけで拾えるようになります。</p>
+          <ul>
+            <li>同じフォルダの「辞書.txt」に1行ずつ書くだけ（再ビルド不要）</li>
+            <li>無音区間で同じ言葉を繰り返す暴走への対策ずみ</li>
+            <li>話者の区別（話者分離）は行いません</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="stage" id="how">
+    <div class="wrap">
+      <div class="sec-head">
+        <p class="eyebrow">02 — HOW IT WORKS</p>
+        <h2>音声を、外に出さない。</h2>
+        <p>会議の中身は、その場かぎりのものです。クラウドに送らずに済むなら、
+          そのほうがいい。ROCK ON MJ は、認識も変換もすべてPCの中で行います。</p>
+      </div>
+
+      <div class="stage-grid">
+        <div class="stage-list">
+          <div class="stage-item">
+            <b>ローカルで完結する</b>
+            <span>音声認識のモデルをPC内に持ち、そこで処理します。通信するのは、
+              最初にモデルを取得するときだけです。</span>
+          </div>
+          <div class="stage-item">
+            <b>落ちても巻き込まれない</b>
+            <span>文字起こしは本体とは別のプロセスで実行します。万一そこで異常が起きても
+              アプリは動き続け、設定を変えて自動で再試行します。</span>
+          </div>
+          <div class="stage-item">
+            <b>録音を失わない</b>
+            <span>録音開始と同時にファイルへ書き込み、数秒ごとに確定させます。
+              強制終了しても、そこまでの音声が残ります。</span>
+          </div>
+          <div class="stage-item">
+            <b>速度の目安</b>
+            <span>50分の会議で42分ほど（第11世代Core i5・メモリ8GB・CPUのみ）。
+              GPUは必要ありません。</span>
+          </div>
+        </div>
+
+        <div class="flow">
+          <div class="flow-step"><em>01</em><span>Web会議を録音（相手の声のみ・自分のマイクは録りません）</span></div>
+          <div class="flow-step"><em>02</em><span>停止すると、録音ファイルが保存される</span></div>
+          <div class="flow-step"><em>03</em><span>そのまま文字起こしが始まる</span></div>
+          <div class="flow-step"><em>04</em><span>テキスト・字幕・Word・Excel が音声と同じ場所に保存される</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="build">
+    <div class="wrap">
+      <div class="sec-head">
+        <p class="eyebrow">03 — GET STARTED</p>
+        <h2>使いはじめる。</h2>
+        <p>ビルド済みの実行ファイルは配布していません。Python が入っていれば、
+          3つの手順で自分のPC用に作れます。</p>
+      </div>
+
+      <div class="steps">
+        <div class="step">
+          <div class="n">1</div>
+          <h3>必要なものを入れる</h3>
+          <p>Python 3.12以降と、下のコマンドで依存パッケージを導入します。</p>
+        </div>
+        <div class="step">
+          <div class="n">2</div>
+          <h3>モデルを取得する</h3>
+          <p>音声認識のモデル（約776MB）を <code>models/</code> に置きます。</p>
+        </div>
+        <div class="step">
+          <div class="n">3</div>
+          <h3>ビルドする</h3>
+          <p>PyInstaller で実行ファイルを作ります。10分ほどかかります。</p>
+        </div>
+      </div>
+
+<pre><span class="c"># 1. 依存パッケージ（ctranslate2 は 4.7.2 に固定してください）</span>
+py -m pip install faster-whisper "ctranslate2==4.7.2" av openpyxl python-docx soundcard pyinstaller
+
+<span class="c"># 2. モデルの取得（models/large-v3-turbo/ に置く）</span>
+py -c "from faster_whisper import WhisperModel; WhisperModel('large-v3-turbo', device='cpu', compute_type='int8', download_root='models')"
+
+<span class="c"># 3. ビルド</span>
+py -m PyInstaller 文字起こしツール_会議録音_fw.spec</pre>
+
+      <p class="note"><b>ctranslate2 のバージョン指定は必須です。</b>
+        4.8.0以降はモデル読み込み時に約3GBを余分に確保するため、
+        メモリの少ないPCで起動できなくなります（実測でピーク1.9GB→4.4GB）。</p>
+
+      <div class="caution">
+        <b>Web会議を録音するときは、参加者への告知と同意を必ず取ってください。</b>
+        録音した内容の取り扱いは、所属する組織のルールに従ってください。
+        また、文字起こしはAIによる自動処理のため、人名や固有名詞を中心に誤変換が含まれます。
+        重要な記録は、必ず元の音声と照らし合わせて確認してください。
+      </div>
+    </div>
+  </section>
+
+  <section class="faq" id="faq">
+    <div class="wrap">
+      <div class="sec-head">
+        <p class="eyebrow">04 — FAQ</p>
+        <h2>よくある質問</h2>
+      </div>
+
+      <details>
+        <summary>音声や文字起こしの内容が、外部に送信されることはありますか？</summary>
+        <p>ありません。録音も音声認識も、すべてPCの中で処理します。通信が発生するのは、
+          最初に音声認識のモデルを取得するときだけです。</p>
+      </details>
+      <details>
+        <summary>自分の声も録音されますか？</summary>
+        <p>録音されるのは「PCから流れてくる音（相手の声）」です。自分がマイクで話した声は
+          含まれません。自分の声も残したい場合は、会議アプリ側の録音機能をご利用ください。</p>
+      </details>
+      <details>
+        <summary>誰が話したかは分かりますか？</summary>
+        <p>話者の区別（話者分離）には対応していません。発言は時刻順に並びます。</p>
+      </details>
+      <details>
+        <summary>Mac やスマートフォンでも使えますか？</summary>
+        <p>Windows 10 / 11（64bit）専用です。録音にWindowsの音声機能を使っているため、
+          他のOSには対応していません。</p>
+      </details>
+      <details>
+        <summary>どのくらいの性能のPCが必要ですか？</summary>
+        <p>GPUは不要で、CPUだけで動きます。メモリは8GB以上を推奨します。
+          文字起こし中は1〜2GBほど使うため、他のアプリを閉じておくと安定します。</p>
+      </details>
+      <details>
+        <summary>実行ファイルを配布しないのはなぜですか？</summary>
+        <p>コード署名をしていないため、配布した実行ファイルは警告の対象になります。
+          自分のPCでビルドしたものであれば、その心配がありません。手順は上のとおりです。</p>
+      </details>
+    </div>
+  </section>
+
+  <section class="cta">
+    <div class="wrap">
+      <p class="eyebrow" style="justify-content:center">READY WHEN YOU ARE</p>
+      <h2>次の会議から、ROCK ON。</h2>
+      <p style="margin-top:14px">ソースコードとビルド手順は、すべてGitHubで公開しています。</p>
+      <div class="hero-actions">
+        <a class="btn btn-main" href="https://github.com/pikaring/rock-on-mj">GitHubで見る</a>
+      </div>
+      <p class="hero-note">MIT License · Windows 10 / 11（64bit）</p>
+    </div>
+  </section>
+
+</main>
+
+<footer class="footer">
+  <div class="wrap footer-inner">
+    <span>ROCK ON MJ — 録音（ROCK ON）と文字起こし（MJ）</span>
+    <a href="https://github.com/pikaring/rock-on-mj">GitHub</a>
+    <a href="https://github.com/pikaring/rock-on-mj/blob/main/LICENSE">MIT License</a>
+    <span class="sep">音声認識に <a href="https://github.com/SYSTRAN/faster-whisper">faster-whisper</a> を利用しています</span>
+  </div>
+</footer>
+
+</body>
+</html>

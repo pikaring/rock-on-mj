@@ -75,6 +75,14 @@ SIZES = [256, 128, 64, 48, 32, 16]
 img.save(OUT_ICO, sizes=[(s, s) for s in SIZES])
 print('書き出し:', OUT_ICO, os.path.getsize(OUT_ICO), 'bytes')
 
+# 紹介ページ（docs/）で使うPNGとファビコンも同じ絵から書き出す
+docs = os.path.join(os.path.dirname(OUT_ICO), 'docs', 'assets')
+if os.path.isdir(os.path.dirname(docs)):
+    os.makedirs(docs, exist_ok=True)
+    img.resize((512, 512), Image.LANCZOS).save(os.path.join(docs, 'icon.png'))
+    img.save(os.path.join(docs, 'favicon.ico'), sizes=[(s, s) for s in (48, 32, 16)])
+    print('書き出し:', os.path.join(docs, 'icon.png'))
+
 # 確認用：実寸を横に並べたPNG
 strip = Image.new('RGBA', (sum(SIZES) + 20 * len(SIZES), 280), (250, 250, 250, 255))
 x = 10
