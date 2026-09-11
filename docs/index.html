@@ -284,9 +284,22 @@ py -m PyInstaller 文字起こしツール_会議録音_fw.spec</pre>
     <span>ROCK ON MJ — 録音（ROCK ON）と文字起こし（MJ）</span>
     <a href="https://github.com/pikaring/rock-on-mj">GitHub</a>
     <a href="https://github.com/pikaring/rock-on-mj/blob/main/LICENSE">MIT License</a>
+    <span class="counter">累計アクセス <b id="counter-value">―</b> 回</span>
     <span class="sep">音声認識に <a href="https://github.com/SYSTRAN/faster-whisper">faster-whisper</a> を利用しています</span>
   </div>
 </footer>
 
+<script>
+// アクセスカウンター（庁内Webと同じGAS。page名でサイトごとに別カウント）
+(function () {
+  var el = document.getElementById('counter-value');
+  if (!el) return;
+  var page = location.pathname.replace(/index\.html$/, '');
+  fetch('https://script.google.com/macros/s/AKfycbxkQLZXNAFXkT7zhIO0TmMDGU3A0TQ234Lf-yhw5J7lvFAjCi3KLNLRd_LKd_xlOxPd/exec?page=' + encodeURIComponent(page))
+    .then(function (r) { return r.json(); })
+    .then(function (d) { el.textContent = Number(d.count).toLocaleString('ja-JP'); })
+    .catch(function () { el.textContent = '―'; });
+})();
+</script>
 </body>
 </html>
