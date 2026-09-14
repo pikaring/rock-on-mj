@@ -1,12 +1,6 @@
 {
- "fetchedAt": "2026-09-14T14:44:41+09:00",
+ "fetchedAt": "2026-09-14T15:13:57+09:00",
  "items": {
-  "B01LZMQCXT": {
-   "title": "ソニー(SONY) ICレコーダー usb 4GB リニアPCM録音対応 FMラジオチューナー内蔵 ブラック ICD-PX470F B",
-   "image": "https://m.media-amazon.com/images/I/411rcz-0y-L._SL500_.jpg",
-   "price": "￥9,700",
-   "url": "https://www.amazon.co.jp/dp/B01LZMQCXT?tag=redcomet-22&linkCode=ogi&th=1&psc=1"
-  },
   "B07YPCRF4G": {
    "title": "ソニー ICレコーダー usb 4GB 薄型・軽量/Sマイク・システム / 最大22時間連続使用 クリアボイス機能搭載 ブラック ICD-UX570F B",
    "image": "https://m.media-amazon.com/images/I/41HgM4zEjAL._SL500_.jpg",
@@ -24,6 +18,12 @@
    "image": "https://m.media-amazon.com/images/I/410504MSxdL._SL500_.jpg",
    "price": "￥45,597",
    "url": "https://www.amazon.co.jp/dp/B0B5ZSJ1WW?tag=redcomet-22&linkCode=ogi&th=1&psc=1"
+  },
+  "B0F1Y3CJJ2": {
+   "title": "Shokz OpenFit 2+ オープンイヤーイヤホン ワイヤレス bluetooth 耳掛け型 【VGP 2026金賞】 ブラック",
+   "image": "https://m.media-amazon.com/images/I/31aTpZhCriL._SL500_.jpg",
+   "price": "￥27,880",
+   "url": "https://www.amazon.co.jp/dp/B0F1Y3CJJ2?tag=redcomet-22&linkCode=ogi&th=1&psc=1"
   }
  }
 }
