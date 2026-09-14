@@ -274,25 +274,25 @@ py -m PyInstaller 文字起こしツール_会議録音_fw.spec</pre>
         <p>ROCK ON MJ は音声ファイルがあれば動きます。会議の録音に使っている道具と、文字起こしを見ながら手直しするときの相棒を並べておきます。</p>
       </div>
       <div class="goods-grid">
-        <div class="good">
+        <div class="good" data-asin="B07YPCRF4G">
           <p class="gcat">ICレコーダー</p>
           <h3>ソニー ICD-UX570F</h3>
           <p>薄くて軽い会議録音の定番。USB直結でファイルを取り出せるので、そのまま ROCK ON MJ に放り込めます。</p>
           <a class="glink" href="https://www.amazon.co.jp/dp/B07YPCRF4G?tag=redcomet-22" target="_blank" rel="sponsored noopener">Amazonで見る ↗</a>
         </div>
-        <div class="good">
+        <div class="good" data-asin="B01LZMQCXT">
           <p class="gcat">ICレコーダー</p>
           <h3>ソニー ICD-PX470F</h3>
           <p>単4電池で動くタイプ。長い会議でも予備電池があれば安心です。</p>
           <a class="glink" href="https://www.amazon.co.jp/dp/B01LZMQCXT?tag=redcomet-22" target="_blank" rel="sponsored noopener">Amazonで見る ↗</a>
         </div>
-        <div class="good">
+        <div class="good" data-asin="B0B5ZSJ1WW">
           <p class="gcat">電子メモ帳</p>
           <h3>キングジム ポメラ DM250</h3>
           <p>起動2秒のテキスト専用機。録音しながら要点だけ打っておくと、あとで文字起こしと突き合わせやすい。</p>
           <a class="glink" href="https://www.amazon.co.jp/dp/B0B5ZSJ1WW?tag=redcomet-22" target="_blank" rel="sponsored noopener">Amazonで見る ↗</a>
         </div>
-        <div class="good">
+        <div class="good" data-asin="B08S7B48FN">
           <p class="gcat">電子メモ帳</p>
           <h3>キングジム ブギーボード BB-14</h3>
           <p>手書きの電子メモパッド。録音中に「ここ重要」と時刻だけ書き留めておく用途に。</p>
@@ -338,6 +338,35 @@ py -m PyInstaller 文字起こしツール_会議録音_fw.spec</pre>
     .then(function (r) { return r.json(); })
     .then(function (d) { el.textContent = Number(d.count).toLocaleString('ja-JP'); })
     .catch(function () { el.textContent = '―'; });
+})();
+</script>
+<script>
+// Amazon Creators API で取った商品情報（tools/fetch_goods.py が assets/goods.json に書く）。
+// 取れていれば画像と価格を足し、無ければテキストカードのまま。
+(function () {
+  var cards = document.querySelectorAll('.good[data-asin]');
+  if (!cards.length) return;
+  fetch('assets/goods.json', { cache: 'no-cache' }).then(function (r) { return r.json(); }).then(function (d) {
+    var at = new Date(d.fetchedAt);
+    var stamp = isNaN(at) ? '' : (at.getMonth() + 1) + '/' + at.getDate() + '時点';
+    cards.forEach(function (c) {
+      var it = d.items && d.items[c.dataset.asin];
+      if (!it) return;
+      if (it.image) {
+        var img = document.createElement('img');
+        img.className = 'gimg'; img.src = it.image; img.alt = ''; img.loading = 'lazy';
+        c.insertBefore(img, c.firstChild);
+      }
+      if (it.price) {
+        var p = document.createElement('p');
+        p.className = 'gprice';
+        p.innerHTML = it.price + (stamp ? ' <small>' + stamp + '</small>' : '');
+        var link = c.querySelector('.glink');
+        c.insertBefore(p, link);
+      }
+      if (it.url) { var a = c.querySelector('.glink'); if (a) a.href = it.url; }
+    });
+  }).catch(function () { /* 取れなければ何もしない */ });
 })();
 </script>
 </body>
