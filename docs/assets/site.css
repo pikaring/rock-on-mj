@@ -220,7 +220,7 @@ details p { margin-top: 12px; font-size: 15px; padding-left: 24px; }
 
 /* 動きを減らす設定を尊重する */
 /* ---- Amazon アソシエイト（道具・本） ---- */
-.goods { border-top: 1px solid var(--line); }
+.goods { border-bottom: 1px solid var(--line); }
 .goods-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
 .good { background: var(--white); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px; display: flex; flex-direction: column; transition: box-shadow .2s, transform .2s; }
 .good:hover { box-shadow: 0 18px 44px -20px #0000002e; transform: translateY(-2px); }
