@@ -64,6 +64,7 @@ p { margin: 0; }
 .nav { margin-left: auto; display: flex; align-items: center; gap: 26px; }
 .nav a { color: var(--body); text-decoration: none; font-size: 14px; font-weight: 500; }
 .nav a:hover { color: var(--red); }
+.nav .btn-main, .nav .btn-main:hover { color: var(--white); }  /* .nav a より優先させる */
 
 /* ---- ボタン ---- */
 .btn {
@@ -236,6 +237,20 @@ details p { margin-top: 12px; font-size: 15px; padding-left: 24px; }
 .footer .disclosure { width: 100%; font-size: 12.5px; color: var(--muted); margin-top: 6px; }
 @media (max-width: 900px) { .goods-grid { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 560px) { .goods-grid { grid-template-columns: 1fr; } }
+
+/* ---- シリーズの相互リンク（4サイト共通の作り） ---- */
+.family { background: var(--cream); border-top: 1px solid var(--line); padding: 64px 0; }
+.family .sec-head { margin-bottom: 28px; }
+.family-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.fam { display: flex; flex-direction: column; gap: 4px; background: var(--white); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px; text-decoration: none; color: var(--body); transition: box-shadow .2s, transform .2s; }
+.fam:hover { box-shadow: 0 18px 44px -20px #0000002e; transform: translateY(-2px); }
+.fam img { width: 44px; height: 44px; border-radius: 11px; margin-bottom: 8px; }
+.fam b { color: var(--ink); font-size: 16px; }
+.fam span { font-size: 13.5px; line-height: 1.6; }
+.fam em { font-style: normal; font-size: 11px; font-weight: 700; color: var(--muted); letter-spacing: .08em; margin-top: 8px; }
+.fam.current { background: var(--paper); border-style: dashed; }
+@media (max-width: 900px) { .family-grid { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 560px) { .family-grid { grid-template-columns: 1fr; } }
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
