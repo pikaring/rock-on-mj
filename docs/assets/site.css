@@ -241,8 +241,8 @@ details p { margin-top: 12px; font-size: 15px; padding-left: 24px; }
 /* ---- シリーズの相互リンク（4サイト共通の作り） ---- */
 .family { background: var(--cream); border-top: 1px solid var(--line); padding: 64px 0; }
 .family .sec-head { margin-bottom: 28px; }
-.family-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
-.fam { display: flex; flex-direction: column; gap: 4px; background: var(--white); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px; text-decoration: none; color: var(--body); transition: box-shadow .2s, transform .2s; }
+.family-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; }
+.fam { display: flex; flex-direction: column; gap: 4px; background: var(--white); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px 18px; text-decoration: none; color: var(--body); transition: box-shadow .2s, transform .2s; }
 .fam:hover { box-shadow: 0 18px 44px -20px #0000002e; transform: translateY(-2px); }
 .fam img { width: 44px; height: 44px; border-radius: 11px; margin-bottom: 8px; }
 .fam b { color: var(--ink); font-size: 16px; }
