@@ -94,7 +94,14 @@ DIAR_ERROR_HINTS = [
      'nemo-speech が古く，Nemotron 3 Diarization に対応していません（READMEの手順で新しい版を用意してください）'),
     ("unknown diarizer geometry preset",
      'nemo-speech が古く，このモデル用の設定（v3-offline）に対応していません'),
+    ('model index is missing',
+     'nemo-speech の model-index.json が見つかりません（diarizer フォルダに置いてください）'),
 ]
+# nemo-speech はローカルのモデルを渡しても，起動時にモデル一覧（model-index.json）を読む。
+# 既定では exe の ..\share\nemo-speech\ を探すため，bin の中身だけを diarizer\ に
+# コピーすると見つからない。次の場所にあれば環境変数で教える。
+DIAR_INDEX_CANDIDATES = ('model-index.json',
+                         os.path.join('..', 'share', 'nemo-speech', 'model-index.json'))
 
 
 def app_base_dir():
@@ -811,6 +818,18 @@ def label_speakers(utts):
     return len(names)
 
 
+def diarizer_env(exe):
+    """nemo-speech を動かす環境変数。model-index.json の場所を教える。"""
+    env = dict(os.environ)
+    if not env.get('NEMO_SPEECH_MODEL_INDEX'):
+        for rel in DIAR_INDEX_CANDIDATES:
+            p = os.path.normpath(os.path.join(os.path.dirname(exe), rel))
+            if os.path.isfile(p):
+                env['NEMO_SPEECH_MODEL_INDEX'] = p
+                break
+    return env
+
+
 def run_diarizer(exe, model_path, wav_path, rttm_path, duration, workdir):
     """nemo-speech.exe で話者識別し，RTTMを書き出す。失敗したら例外。"""
     err_path = os.path.join(workdir, 'diar_stderr.txt')
@@ -826,7 +845,7 @@ def run_diarizer(exe, model_path, wav_path, rttm_path, duration, workdir):
     flags = 0x08000000 if os.name == 'nt' else 0   # CREATE_NO_WINDOW
     with open(err_path, 'w', encoding='utf-8', errors='replace') as err:
         proc = subprocess.Popen(cmd, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
-                                stderr=err, creationflags=flags)
+                                stderr=err, env=diarizer_env(exe), creationflags=flags)
         last = 0
         while proc.poll() is None:
             time.sleep(0.5)

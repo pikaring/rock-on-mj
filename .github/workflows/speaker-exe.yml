@@ -115,6 +115,8 @@ jobs:
           $app = "dist\$env:APP_NAME"
           $dz = New-Item -ItemType Directory -Force "$app\diarizer"
           Copy-Item nsc\build\cpu\bin\nemo-speech.exe, nsc\build\cpu\bin\*.dll $dz
+          # nemo-speech は起動時にモデル一覧を読む（無いと local の GGUF でも失敗する）
+          Copy-Item nsc\models\index.json "$dz\model-index.json"
           # Visual C++ ランタイム（配布先PCに入っていなくても動くように）
           $vs = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -property installationPath
           $redist = Get-ChildItem "$vs\VC\Redist\MSVC\*\x64" -Directory | Where-Object { $_.Parent.Name -match '^\d' } | Select-Object -Last 1

@@ -176,12 +176,19 @@ nemo-speech が無い・古い・異常終了した・メモリが足りない�
 ├─ _internal\
 ├─ diarizer\                 ← nemo-speech.exe と DLL 一式（bin フォルダの中身）
 │   ├─ nemo-speech.exe
-│   └─ *.dll
+│   ├─ *.dll
+│   └─ model-index.json        ← share\nemo-speech\ にあるもの（下記）
 └─ models\
     ├─ large-v3-turbo\          ← 文字起こしモデル（従来どおり）
     └─ diarization\
         └─ Nemotron-3-Diarization.q8_0.gguf   ← 話者識別モデル（107MB）
 ```
+
+**`model-index.json` も必ず置くこと。** nemo-speech はローカルのモデルを渡しても
+起動時にこのモデル一覧を読み、既定では exe の `..\share\nemo-speech\` を探す。
+bin の中身だけをコピーすると `model index is missing` で失敗する（Windows実機で確認）。
+ツールは `diarizer\model-index.json` か `diarizer\..\share\nemo-speech\` にあれば
+環境変数 `NEMO_SPEECH_MODEL_INDEX` で場所を教えてから起動する。
 
 `diarizer\` に無ければ、NeMo-Speech.cpp の既定のインストール先
 （`%LOCALAPPDATA%\Programs\NeMoSpeech\bin`）と PATH も探す。そろっていなければ
