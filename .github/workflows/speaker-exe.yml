@@ -1,0 +1,173 @@
+name: speaker-exe
+
+# 話者識別版（whisper_gui_speaker.py）の Windows 用 exe を作り，実際に動かして確かめる。
+#
+# - nemo-speech.exe（話者識別）は NeMo-Speech.cpp をソースからビルドする。
+#   リリース版 0.1.0 は Nemotron 3 Diarization を読めないため（README参照）。
+#   ggml は既定だとビルドしたPCのCPU向け（-march=native 相当）になり，
+#   AVX-512 を持つビルド用サーバーで作ると配布先PCで落ちる。AVX2 までに固定し，
+#   できたバイナリに AVX-512 の命令（zmm レジスタ）が無いことも確かめる。
+# - 文字起こしモデル（large-v3-turbo 等）は同梱しない。従来どおり models\ に置く。
+# - 成果物は Actions の Artifacts から取得する（保存期間 7日）。
+
+on:
+  push:
+    branches: ['claude/**']
+    paths:
+      - whisper_gui_speaker.py
+      - 文字起こしツール_話者識別_fw.spec
+      - tools/smoke_speaker_exe.py
+      - .github/workflows/speaker-exe.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  # 2026-09-24「feat(diar): make Nemotron 3 Diarization the default diarizer」
+  NEMO_SPEECH_REF: 97a15afa5caa9bce5baaa86c1184103877af4101
+  DIAR_MODEL_URL: https://huggingface.co/nvidia/Nemotron-3-Diarization/resolve/main/Nemotron-3-Diarization.q8_0.gguf
+  APP_NAME: 会議録音ツール_話者識別
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 150
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Checkout NeMo-Speech.cpp
+        uses: actions/checkout@v4
+        with:
+          repository: NVIDIA/NeMo-Speech.cpp
+          ref: ${{ env.NEMO_SPEECH_REF }}
+          path: nsc
+          persist-credentials: false
+
+      - name: Initialize submodules
+        run: git -C nsc submodule update --init --depth 1 ggml llama.cpp
+
+      - name: Install Ninja
+        run: |
+          if (-not (Get-Command ninja -ErrorAction SilentlyContinue)) {
+            choco install -y ninja --no-progress
+          }
+
+      - name: Restore vcpkg binaries
+        uses: actions/cache@v4
+        with:
+          path: ~\AppData\Local\vcpkg\archives
+          key: vcpkg-windows-x64-${{ env.NEMO_SPEECH_REF }}
+          restore-keys: vcpkg-windows-x64-
+
+      - name: Build nemo-speech (CPU, AVX2)
+        working-directory: nsc
+        run: |
+          # build.ps1 には ggml のオプションを渡す口が無いので，cmake の直前に差し込む
+          $p = 'scripts\windows\build.ps1'
+          $s = Get-Content $p -Raw
+          $hook = '& cmake @cmakeArgs'
+          if (([regex]::Matches($s, [regex]::Escape($hook))).Count -ne 1) { throw "build.ps1 の形が想定と違います" }
+          $s = $s.Replace($hook, "`$cmakeArgs += '-DGGML_NATIVE=OFF', '-DGGML_AVX2=ON', '-DGGML_AVX512=OFF'`n$hook")
+          Set-Content $p $s -Encoding utf8
+          .\scripts\windows\build.ps1 -Backend cpu -Profile asr -BuildDir "$pwd\build\cpu"
+          Get-ChildItem build\cpu\bin
+
+      - name: Check no AVX-512 instructions
+        run: |
+          $vs = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -property installationPath
+          $dumpbin = Get-ChildItem "$vs\VC\Tools\MSVC\*\bin\Hostx64\x64\dumpbin.exe" | Select-Object -Last 1
+          $bad = 0
+          foreach ($f in Get-ChildItem nsc\build\cpu\bin -Include *.exe, *.dll -Recurse) {
+            $n = (& $dumpbin.FullName /disasm:nobytes $f.FullName | Select-String -Pattern '\bzmm\d+' ).Count
+            Write-Host ("{0,-32} zmm={1}" -f $f.Name, $n)
+            if ($n -gt 0) { $bad++ }
+          }
+          if ($bad) { throw "AVX-512 の命令を含むファイルがあります（配布先PCで落ちます）" }
+
+      - name: Smoke test nemo-speech
+        run: |
+          curl.exe -sSL -o diar.gguf "$env:DIAR_MODEL_URL"
+          nsc\build\cpu\bin\nemo-speech.exe --version
+          nsc\build\cpu\bin\nemo-speech.exe diarize nsc\test_files\diar\ami_en2002d_2132.wav `
+            --model diar.gguf --backend cpu --preset v3-offline --format rttm --output diar.rttm --force
+          if ($LASTEXITCODE -ne 0) { throw "nemo-speech diarize failed ($LASTEXITCODE)" }
+          Get-Content diar.rttm | Select-Object -First 5
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Python packages
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install "faster-whisper==1.2.1" "ctranslate2==4.7.2" av openpyxl python-docx soundcard pyinstaller
+
+      - name: Build exe (PyInstaller)
+        run: python -m PyInstaller --noconfirm 文字起こしツール_話者識別_fw.spec
+
+      - name: Add diarizer and model
+        run: |
+          $app = "dist\$env:APP_NAME"
+          $dz = New-Item -ItemType Directory -Force "$app\diarizer"
+          Copy-Item nsc\build\cpu\bin\nemo-speech.exe, nsc\build\cpu\bin\*.dll $dz
+          # Visual C++ ランタイム（配布先PCに入っていなくても動くように）
+          $vs = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -property installationPath
+          $redist = Get-ChildItem "$vs\VC\Redist\MSVC\*\x64" -Directory | Where-Object { $_.Parent.Name -match '^\d' } | Select-Object -Last 1
+          Copy-Item "$($redist.FullName)\Microsoft.VC14*.CRT\*.dll" $dz
+          Copy-Item "$($redist.FullName)\Microsoft.VC14*.OpenMP\vcomp140.dll" $dz
+          Copy-Item nsc\LICENSE "$dz\LICENSE_NeMo-Speech.cpp.txt"
+          Copy-Item nsc\THIRD_PARTY_NOTICES.md "$dz\THIRD_PARTY_NOTICES_NeMo-Speech.cpp.md"
+          Set-Content "$dz\VERSION.txt" "NeMo-Speech.cpp $env:NEMO_SPEECH_REF (CPU, AVX2, Release)" -Encoding utf8
+          $md = New-Item -ItemType Directory -Force "$app\models\diarization"
+          Copy-Item diar.gguf "$md\Nemotron-3-Diarization.q8_0.gguf"
+          Set-Content "$md\LICENSE.txt" "Nemotron 3 Diarization (NVIDIA) - OpenMDW License Agreement v1.1`nhttps://huggingface.co/nvidia/Nemotron-3-Diarization" -Encoding utf8
+          Get-ChildItem $dz | Format-Table Name, Length
+
+      - name: Download test Whisper model
+        run: |
+          python -c "from faster_whisper import WhisperModel; WhisperModel('small', device='cpu', compute_type='int8', download_root='wtest')"
+          $m = (Get-ChildItem wtest -Recurse -Filter model.bin | Select-Object -First 1).DirectoryName
+          "WHISPER_TEST_MODEL=$m" | Out-File $env:GITHUB_ENV -Append -Encoding utf8
+
+      - name: Smoke test exe (on a copy, under a Japanese path)
+        run: |
+          $root = Join-Path $env:RUNNER_TEMP 'テスト 用'
+          New-Item -ItemType Directory -Force $root | Out-Null
+          Copy-Item "dist\$env:APP_NAME" $root -Recurse
+          $audio = Join-Path $root '会議 テスト.wav'
+          Copy-Item nsc\test_files\diar\ami_en2002d_2132.wav $audio
+          python tools\smoke_speaker_exe.py --app-dir (Join-Path $root $env:APP_NAME) `
+            --whisper-model $env:WHISPER_TEST_MODEL --audio $audio --language en
+          if ($LASTEXITCODE -ne 0) { throw "smoke test failed" }
+
+      - name: Add readme
+        run: |
+          $text = @"
+          ROCK ON MJ 話者識別版（開発中・動作確認用）
+
+          使い方
+          1. このフォルダごとPC内（デスクトップ等）にコピーする。
+          2. 今お使いの文字起こしツールの models フォルダの中身（large-v3-turbo 等）を
+           このフォルダの models\ にコピーする（models\diarization はそのまま残す）。
+          3. 会議録音ツール_話者識別.exe を起動し，「話者を区別する」にチェックが入っていることを確かめる。
+
+          同梱物
+          - diarizer\   : 話者識別の実行ファイル（NVIDIA NeMo-Speech.cpp, Apache-2.0）
+          - models\diarization\ : 話者識別モデル（NVIDIA Nemotron 3 Diarization, OpenMDW-1.1）
+
+          注意
+          - コード署名していないため，初回は SmartScreen の警告やスキャン待ちが出ることがあります。
+          - Web会議を録音する際は，参加者への録音の告知・同意を必ず取得してください。
+          - 詳しくは https://github.com/${{ github.repository }} の README「話者識別版」を参照。
+          "@
+          Set-Content "dist\$env:APP_NAME\はじめにお読みください.txt" $text -Encoding utf8
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.APP_NAME }}-${{ github.sha }}
+          path: dist/${{ env.APP_NAME }}
+          retention-days: 7

@@ -212,6 +212,24 @@ curl.exe -L -o models\diarization\Nemotron-3-Diarization.q8_0.gguf `
   できた `%LOCALAPPDATA%\Programs\NeMoSpeech\bin` の中身を `diarizer\` にコピーする。
 - 古い nemo-speech を置いた場合は、ログに「nemo-speech が古く…」と出て話者なしで続行する。
 
+### exe の自動ビルド（GitHub Actions）
+
+`.github/workflows/speaker-exe.yml` が Windows 上で次を行う（`claude/**` ブランチへの
+push か、手動実行で動く）:
+
+1. NeMo-Speech.cpp（上記コミットに固定）を CPU 版でビルドする。**ggml は既定だと
+   ビルドしたPCのCPU向けになり、AVX-512 を持つビルド用サーバーで作ると配布先PC
+   （第12・13世代など）で落ちる**ので、`GGML_NATIVE=OFF`（AVX2まで）に固定し、
+   できた exe/DLL に AVX-512 の命令（zmm レジスタ）が無いことを `dumpbin` で確かめる。
+2. PyInstaller で exe を作り、`diarizer\`（nemo-speech.exe・DLL・VC++ランタイム・
+   ライセンス）と `models\diarization\`（GGUF）を加える。
+3. **日本語を含むフォルダにコピーして実際に動かす**（`tools/smoke_speaker_exe.py`）。
+   画面が起動して部品を見つけること、`--transcribe-worker` で話者識別つきの
+   文字起こしが最後まで通り、4形式に話者が出ることを確認する（AMIの英語音声と
+   Whisper small を使用）。
+4. できたフォルダを Actions の Artifacts に置く（**7日で消える**、動作確認用）。
+   文字起こしモデル（large-v3-turbo 等）は含まないので、今の `models\` の中身をコピーして使う。
+
 ### 実測（Linux・Xeon 2.1GHz 4コア・CPU、NeMo-Speech.cpp main 97a15af をビルド）
 
 AMI会議コーパスの60秒の抜粋（英語・3人＋相づちのみの1人）で:
@@ -301,7 +319,8 @@ whisper_gui_speaker.py          # 話者識別版 本体（会議録音版＋話
 このリポジトリのソース（`whisper_gui_*.py`・`*.spec`・`make_icon.py`）は
 **MIT License** です（[LICENSE](LICENSE)）。
 
-**ビルド済みの実行ファイルは配布していません。** 上の「ビルド（配布用 exe の作成）」の
+**ビルド済みの実行ファイルは配布していません**（話者識別版の動作確認用に、
+GitHub Actions の Artifacts に7日間だけ置くものを除く）。 上の「ビルド（配布用 exe の作成）」の
 手順で各自作成してください。モデルも各自で取得します（同「モデルの取得」）。
 
 ビルドした実行ファイルには第三者のライブラリが同梱されます。再配布する場合は
