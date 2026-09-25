@@ -74,12 +74,17 @@ def check_worker(app_dir, whisper_model, audio, language):
     # 画面と同じく一時フォルダの日本語名のフォルダを使う（日本語パスの確認も兼ねる）
     workdir = os.path.join(tempfile.gettempdir(), '文字起こしツール_話者識別')
     os.makedirs(workdir, exist_ok=True)
+    diar_dir = os.path.join(tempfile.gettempdir(), 'rock_on_mj_diar')
+    os.makedirs(diar_dir, exist_ok=True)
+    if not diar_dir.isascii():
+        fail(f'一時フォルダが英数字だけではありません: {diar_dir}')
     job = dict(model_path=whisper_model, audio_path=audio, prompt='',
                result_path=os.path.join(workdir, '_result.txt'),
                out_txt=True, out_srt=True, out_docx=True, out_xlsx=True,
                diarize=True, diarizer_exe=diarizer, diar_model=ggufs[0],
-               diar_wav=os.path.join(workdir, 'diar_input.wav'),
-               rttm_path=os.path.join(workdir, 'diar_result.rttm'),
+               # 画面と同じく英数字だけの作業フォルダ（diar_workdir と同じ場所）
+               diar_wav=os.path.join(diar_dir, 'diar_input.wav'),
+               rttm_path=os.path.join(diar_dir, 'diar_result.rttm'),
                language=language)
     for p in (job['rttm_path'], job['diar_wav']):
         if os.path.exists(p):

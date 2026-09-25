@@ -7,6 +7,7 @@ import sys
 import os
 import bisect
 import ctypes
+import hashlib
 import faulthandler
 import json
 import platform
@@ -675,19 +676,69 @@ def diar_preset(model_path):
     return 'offline' if 'sortformer' in name else 'v3-offline'
 
 
-def _short_path(path):
-    """Windowsの短い名前（8.3形式）に変換する。C++製のexeに日本語を含むパスを
-    渡すと文字化けで開けないことがあるための保険。変換できなければそのまま返す。"""
-    if os.name != 'nt':
+# nemo-speech（C++製）はコマンドラインのパスをANSIコードページで受け取るため，
+# 日本語を含むパスは「???」に化けて開けない（GitHub Actions の Windows で確認。
+# 日本語版Windows（CP932）なら通る可能性もあるが当てにしない）。
+# 渡すパスは必ず英数字だけにする。
+
+def ascii_path(path):
+    """英数字だけのパスを返す。そのままで駄目なら短い名前（8.3形式）を試す。
+    どちらも駄目なら None（8.3形式はドライブの設定で無効なことがある）。"""
+    if path.isascii():
         return path
+    if os.name == 'nt':
+        try:
+            buf = ctypes.create_unicode_buffer(1024)
+            n = ctypes.windll.kernel32.GetShortPathNameW(path, buf, len(buf))
+            if 0 < n < len(buf) and buf.value.isascii():
+                return buf.value
+        except Exception:
+            pass
+    return None
+
+
+def diar_workdir():
+    """話者識別の作業フォルダ（英数字だけのパス）。用意できなければ None。
+    変換した会議音声を置くので，まずは本人しか読めない一時フォルダを使う。"""
+    cands = [os.path.join(tempfile.gettempdir(), 'rock_on_mj_diar')]
+    shared = os.environ.get('ProgramData')
+    if shared:
+        # 一時フォルダのパスにユーザー名（日本語）が入る場合の逃げ道。音声は使ったら消す
+        user = hashlib.sha1(os.path.expanduser('~').encode('utf-8')).hexdigest()[:8]
+        cands.append(os.path.join(shared, 'rock_on_mj_diar', user))
+    for d in cands:
+        try:
+            os.makedirs(d, exist_ok=True)
+        except OSError:
+            continue
+        a = ascii_path(d)
+        if a:
+            return a
+    return None
+
+
+def ascii_model_path(model_path, workdir):
+    """モデルのパスが英数字だけでなければ，作業フォルダに英数字の名前で
+    ハードリンク（できなければコピー）を作ってそちらを返す。次回からは使い回す。"""
+    a = ascii_path(model_path)
+    if a:
+        return a
+    dst = os.path.join(workdir, 'diar_model' + os.path.splitext(model_path)[1])
     try:
-        buf = ctypes.create_unicode_buffer(1024)
-        n = ctypes.windll.kernel32.GetShortPathNameW(path, buf, len(buf))
-        if 0 < n < len(buf):
-            return buf.value
-    except Exception:
+        if (os.path.getsize(dst) == os.path.getsize(model_path)
+                and os.path.getmtime(dst) >= os.path.getmtime(model_path)):
+            return dst
+    except OSError:
         pass
-    return path
+    try:
+        os.remove(dst)
+    except OSError:
+        pass
+    try:
+        os.link(model_path, dst)
+    except OSError:
+        shutil.copyfile(model_path, dst)   # 別ドライブ等でハードリンクできない
+    return dst
 
 
 def write_wav16k(audio_path, out_path):
@@ -831,14 +882,13 @@ def diarizer_env(exe):
 
 
 def run_diarizer(exe, model_path, wav_path, rttm_path, duration, workdir):
-    """nemo-speech.exe で話者識別し，RTTMを書き出す。失敗したら例外。"""
+    """nemo-speech.exe で話者識別し，RTTMを書き出す。失敗したら例外。
+    model_path・wav_path・rttm_path は英数字だけのパスであること（ascii_path 参照）。"""
     err_path = os.path.join(workdir, 'diar_stderr.txt')
-    cmd = [exe, 'diarize', _short_path(wav_path),
-           '--model', _short_path(model_path),
+    cmd = [exe, 'diarize', wav_path,
+           '--model', model_path,
            '--backend', 'cpu', '--preset', diar_preset(model_path),
-           '--format', 'rttm',
-           '--output', os.path.join(_short_path(workdir), os.path.basename(rttm_path)),
-           '--force']
+           '--format', 'rttm', '--output', rttm_path, '--force']
     _emit('log', m=f'  実行: {os.path.basename(exe)} diarize（{diar_preset(model_path)}）')
     timeout = DIAR_TIMEOUT_BASE_SEC + duration * DIAR_TIMEOUT_FACTOR
     start = time.time()
@@ -898,6 +948,9 @@ def diarize_step(job):
         _emit('status', m='話者識別の準備中（音声を変換）...')
         _emit('log', m='>>> 話者識別（誰が話したか）を開始...')
         _emit('log', m=f'  モデル: {os.path.basename(model)}')
+        if not (wav_path.isascii() and rttm_path.isascii()):
+            raise RuntimeError('作業フォルダを英数字だけの場所に用意できませんでした')
+        model = ascii_model_path(model, workdir)
         duration = write_wav16k(job['audio_path'], wav_path)
         need = DIAR_MEM_BASE_GB + DIAR_MEM_PER_MIN_GB * duration / 60
         _, _, commit = memory_gb()
@@ -1777,6 +1830,9 @@ class WhisperApp(tk.Tk):
             os.makedirs(workdir, exist_ok=True)
             work = os.path.join(workdir, '_job.json')
             result_path = os.path.join(workdir, '_result.txt')
+            # 用意できないときは従来の作業フォルダ（日本語を含みうる）。
+            # その場合 diarize_step が気付いて話者なしで続行する。
+            diar_dir = diar_workdir() or workdir
             job = dict(model_path=model_path, audio_path=audio_path,
                        prompt=build_initial_prompt(app_base_dir()),
                        result_path=result_path,
@@ -1784,9 +1840,9 @@ class WhisperApp(tk.Tk):
                        out_docx=self.out_docx.get(), out_xlsx=self.out_xlsx.get(),
                        diarize=self.diarize_var.get(),
                        diarizer_exe=self._diarizer_exe, diar_model=self._diar_model,
-                       # nemo-speech に渡すファイル名は英数字だけにしておく
-                       diar_wav=os.path.join(workdir, 'diar_input.wav'),
-                       rttm_path=os.path.join(workdir, 'diar_result.rttm'))
+                       # nemo-speech に渡すパスは英数字だけにする（ascii_path 参照）
+                       diar_wav=os.path.join(diar_dir, 'diar_input.wav'),
+                       rttm_path=os.path.join(diar_dir, 'diar_result.rttm'))
             with open(work, 'w', encoding='utf-8') as f:
                 json.dump(job, f, ensure_ascii=False)
             # 前回の話者識別の結果が残っていると，別の音声に使い回してしまう
