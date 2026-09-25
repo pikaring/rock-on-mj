@@ -6,6 +6,7 @@ dist*/
 build/
 _internal/
 *.exe
+diarizer/          # 話者識別版で使う nemo-speech.exe 一式（各自で用意）
 
 # ── 実行時に生成されるもの ──
 辞書.txt          # 起動時に既定テンプレが自動生成される（固有名詞を含みうるため除外）

@@ -1,12 +1,13 @@
 # ROCK ON MJ
 
 **録音（ROCK ON）と文字起こし（MJ）**をまとめてこなす、Windows上でローカル完結する音声文字起こしツールです。録音データを外部に送信せず、
-すべてお使いのPC内で処理します。用途に応じて2つの版があります。
+すべてお使いのPC内で処理します。用途に応じて3つの版があります。
 
 | ソース | 用途 | ビルド後の名称 |
 |---|---|---|
 | `whisper_gui_fw.py` | 手持ちの音声ファイルを文字起こし | 文字起こしツール |
 | `whisper_gui_meeting.py` | 上記に加え、Web会議（相手の声）を録音して文字起こし | 文字起こし／会議録音ツール |
+| `whisper_gui_speaker.py` | 会議録音版に加え、**誰が話したか（話者A・話者B…）を区別**（開発中） | 会議録音ツール_話者識別 |
 
 ## 主な機能
 
@@ -18,6 +19,8 @@
 - **Web会議の録音（会議録音版のみ）**: `soundcard` によるWASAPIループバックで、スピーカー/ヘッドセットに流れる相手の声を録音 →そのまま文字起こし。管理者権限・ドライバ不要。
 - **録音データの保全（会議録音版のみ）**: 録音開始と同時にWAVへ逐次書き込み（数秒ごとにヘッダ更新＋fsync）。デバイスエラー時は最大5回まで自動で録り直しを試み、復旧できなかった場合も途中までの音声を残してそのまま文字起こしに回せる。強制終了で取り残されたWAVは次回起動時にヘッダを自動修復。
 - **オフライン動作**: インターネット接続なしで利用可能（モデル取得時のみ通信）。
+
+- **話者識別（話者識別版のみ・開発中）**: NVIDIA の [Nemotron 3 Diarization](https://huggingface.co/nvidia/Nemotron-3-Diarization)（最大8人）で「誰がいつ話したか」を判定し、発言ごとに「話者A」「話者B」…を付ける。詳しくは下の「話者識別版」。
 
 > ⚠️ **Web会議を録音する際は、参加者への録音の告知・同意を必ず取得してください。**
 
@@ -142,6 +145,101 @@ SEHで処理されて実害が無い。faulthandlerが報告するので紛ら�
 なお exe は UPX 圧縮していない（セキュリティ対策ソフトの誤検知と、
 ネイティブDLLの破損を避けるため）。
 
+## 話者識別版（whisper_gui_speaker.py）
+
+会議録音版に「話者を区別する」チェックを加えた版。完成済みの2版には手を入れず、
+別ファイルとして開発している。**チェックを外すと会議録音版と同じ出力になる**
+（Excelの見出し行を固定表示にした点だけ違う）。
+
+### しくみ
+
+1. 音声を 16kHz・モノラルのWAVに変換し、`nemo-speech.exe diarize`（NVIDIA
+   [NeMo-Speech.cpp](https://github.com/NVIDIA/NeMo-Speech.cpp) のCPU版）を
+   **別プロセスで**実行して、話者区間（RTTM）を受け取る。PyTorch は使わない。
+2. **話者識別を先に終えてから** Whisper のモデルを読み込む。両方を同時に
+   メモリへ載せないので、ピークメモリは会議録音版と変わらない。
+3. Whisper の単語ごとの時刻（`word_timestamps`）で、発言を話者の切り替わりで
+   分ける（「はい」等の相づちも別の話者として切り出せる）。0.3秒未満の
+   切り替わりは前後に吸収する。
+4. 話者は登場順に「話者A」「話者B」…と名付ける。4形式とも話者つきで出力し、
+   txt・docx には話者ごとの発言時間も付ける（Excelは「話者」列を追加）。
+
+**話者識別が失敗しても文字起こしは止めない**（話者なしで出力する）。
+nemo-speech が無い・古い・異常終了した・メモリが足りない、のいずれでも同じ。
+別設定での再試行（`FALLBACKS`）では、話者識別の結果（RTTM）を使い回す。
+
+### 用意するもの
+
+```
+会議録音ツール_話者識別\
+├─ 会議録音ツール_話者識別.exe
+├─ _internal\
+├─ diarizer\                 ← nemo-speech.exe と DLL 一式（bin フォルダの中身）
+│   ├─ nemo-speech.exe
+│   └─ *.dll
+└─ models\
+    ├─ large-v3-turbo\          ← 文字起こしモデル（従来どおり）
+    └─ diarization\
+        └─ Nemotron-3-Diarization.q8_0.gguf   ← 話者識別モデル（107MB）
+```
+
+`diarizer\` に無ければ、NeMo-Speech.cpp の既定のインストール先
+（`%LOCALAPPDATA%\Programs\NeMoSpeech\bin`）と PATH も探す。そろっていなければ
+チェックボックスが押せず、何が足りないかを横に表示する。
+
+**モデル（GGUF）** は Hugging Face から取得する（OpenMDW-1.1、商用利用可）:
+
+```powershell
+curl.exe -L -o models\diarization\Nemotron-3-Diarization.q8_0.gguf `
+  https://huggingface.co/nvidia/Nemotron-3-Diarization/resolve/main/Nemotron-3-Diarization.q8_0.gguf
+```
+
+モデルは必ずファイルとして置くこと。nemo-speech にモデル名だけを渡すと
+自分でダウンロードしに行くため、ツールは常にローカルのパスを渡している。
+
+**nemo-speech.exe** は、2026年9月時点では**ソースからのビルドが必要**:
+
+- 配布中のリリース版 0.1.0（`nemo-speech-0.1.0-windows-x86_64-cpu.zip`）は
+  **Nemotron 3 Diarization を読めない**（`pre_ln transformer variant is not supported`）。
+  対応は 2026-09-24 に main へ入ったばかり（`feat(diar): make Nemotron 3 Diarization the default diarizer`）。
+  次のリリースが出たら、その zip の `bin\` の中身を `diarizer\` にコピーするだけでよい。
+- それまでは NeMo-Speech.cpp の手順でCPU版をビルドする（Git, CMake, Ninja,
+  Visual Studio 2022 Build Tools が必要）:
+  ```powershell
+  irm https://github.com/NVIDIA/NeMo-Speech.cpp/raw/main/scripts/install.ps1 -OutFile install-nemo-speech.ps1
+  powershell -ExecutionPolicy Bypass -File .\install-nemo-speech.ps1 -Source -Backend cpu -Profile asr
+  ```
+  できた `%LOCALAPPDATA%\Programs\NeMoSpeech\bin` の中身を `diarizer\` にコピーする。
+- 古い nemo-speech を置いた場合は、ログに「nemo-speech が古く…」と出て話者なしで続行する。
+
+### 実測（Linux・Xeon 2.1GHz 4コア・CPU、NeMo-Speech.cpp main 97a15af をビルド）
+
+AMI会議コーパスの60秒の抜粋（英語・3人＋相づちのみの1人）で:
+
+| 設定 | 処理時間 | メモリ | DER（単語単位の正解と比較） |
+|---|---|---|---|
+| 既定（streaming） | 30.9秒 | 197MB | 25.1% |
+| **`--preset v3-offline`（採用）** | **2.9秒** | 149MB | 23.7% |
+| `--offline`（6.6分までしか扱えない） | 1.8秒 | 156MB | 23.5% |
+
+`v3-offline` は長い音声でも使え、30分で98秒・0.64GB、60分で195秒・1.17GB。
+**メモリは音声の長さにほぼ比例する**（1分あたり約18MB）ため、開始前に空きコミットを
+見て、足りなければ話者識別だけ省略する（`DIAR_MEM_*`）。
+Whisper（small, int8）と合わせた通しの処理で、主な3人の発言はほぼ正しく
+振り分けられた（外れたのは、数語しか話さない4人目の「Okay」と、話者の境目の「Yeah」の2か所）。
+
+### まだ確かめていないこと（Windows実機で要確認）
+
+- 第13世代 i5-1335U など、実際の配布先PCでの処理時間とメモリ
+- **日本語の会議音声での精度**（公式の対応言語に日本語は無い。声質で分けるので
+  影響は小さいはずだが未確認。[公開デモ](https://huggingface.co/spaces/nvidia/nemotron-diarization)でも試せる）
+- 日本語を含むパスでの動作（念のため、nemo-speech には英数字のファイル名と
+  Windowsの短いパス名（8.3形式）を渡している）
+- 資産管理ソフト等のDLL注入がある第11世代機で nemo-speech.exe が落ちないか
+  （落ちても話者なしで続行する）
+- 5人以上の会議では精度が大きく落ちる（DIHARD IIIで誤り率28〜42%）。参考表示と考える。
+- 会議録音版と同じく、録音するのは相手の声だけ（自分の声は話者識別の対象外）。
+
 ## セットアップ（ソースから動かす場合）
 
 ```powershell
@@ -168,6 +266,7 @@ py -c "from faster_whisper import WhisperModel; WhisperModel('large-v3-turbo', d
 ```powershell
 py whisper_gui_fw.py          # ファイル文字起こし版
 py whisper_gui_meeting.py     # 会議録音版
+py whisper_gui_speaker.py     # 話者識別版
 ```
 
 ## ビルド（配布用 exe の作成）
@@ -177,10 +276,13 @@ py whisper_gui_meeting.py     # 会議録音版
 ```powershell
 py -m PyInstaller 文字起こしツール_fw.spec            # ファイル文字起こし版
 py -m PyInstaller 文字起こしツール_会議録音_fw.spec     # 会議録音版
+py -m PyInstaller 文字起こしツール_話者識別_fw.spec     # 話者識別版
 ```
 
 - **onedir 構成**（EXE + `_internal/` フォルダ）。配布は「フォルダごと」渡します。
 - 出力後、`dist/<名称>/models/` にモデルフォルダを配置すれば単体で動作します。
+- 話者識別版は、さらに `dist/会議録音ツール_話者識別/diarizer/` と
+  `models/diarization/` を置きます（上の「話者識別版」）。
 - 各PCでの**初回起動はセキュリティスキャンのため約90〜120秒**かかります（2回目以降は数秒）。
 
 ## ファイル構成
@@ -188,8 +290,10 @@ py -m PyInstaller 文字起こしツール_会議録音_fw.spec     # 会議録�
 ```
 whisper_gui_fw.py               # ファイル文字起こし版 本体
 whisper_gui_meeting.py          # 会議録音版 本体（fw版＋録音機能）
+whisper_gui_speaker.py          # 話者識別版 本体（会議録音版＋話者識別）
 文字起こしツール_fw.spec           # ファイル文字起こし版 PyInstaller spec
 文字起こしツール_会議録音_fw.spec    # 会議録音版 PyInstaller spec
+文字起こしツール_話者識別_fw.spec    # 話者識別版 PyInstaller spec
 ```
 
 ## ライセンス
@@ -211,6 +315,9 @@ whisper_gui_meeting.py          # 会議録音版 本体（fw版＋録音機能�
 | Intel MKL（`ctranslate2.dll` に静的リンク） | Intel の再頒布条件に従う |
 | onnxruntime / tokenizers / huggingface_hub | MIT / Apache-2.0 |
 | tqdm | MPL-2.0 AND MIT |
+| （話者識別版）NeMo-Speech.cpp（`diarizer\` の nemo-speech.exe。ggml / llama.cpp を含む） | Apache-2.0（ggml・llama.cpp は MIT） |
+| （話者識別版）Nemotron 3 Diarization モデル | OpenMDW-1.1 |
+| （話者識別版）Microsoft Visual C++ ランタイム（`diarizer\` の msvcp140.dll 等） | Microsoft の再頒布条件に従う |
 
 **実行ファイルはコード署名していません。** 初回起動時に SmartScreen の警告が出たり、
 ウイルス対策ソフトがスキャンのため数十秒ブロックしたりします。
