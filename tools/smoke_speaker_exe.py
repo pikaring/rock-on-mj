@@ -141,6 +141,8 @@ def check_worker(app_dir, whisper_model, audio, language):
 
 
 def main():
+    # Windows のコンソール（cp1252 等）でも日本語のログを出せるようにする
+    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
     ap = argparse.ArgumentParser()
     ap.add_argument('--app-dir', required=True)
     ap.add_argument('--whisper-model', required=True)

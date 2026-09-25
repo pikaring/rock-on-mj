@@ -28,6 +28,7 @@ env:
   NEMO_SPEECH_REF: 97a15afa5caa9bce5baaa86c1184103877af4101
   DIAR_MODEL_URL: https://huggingface.co/nvidia/Nemotron-3-Diarization/resolve/main/Nemotron-3-Diarization.q8_0.gguf
   APP_NAME: 会議録音ツール_話者識別
+  PYTHONUTF8: '1'
 
 jobs:
   build:
