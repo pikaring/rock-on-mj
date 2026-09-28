@@ -1,0 +1,73 @@
+name: build-exe
+
+# Windows 用の EXE（PyInstaller onedir）をビルドし、モデル同梱で Actions の成果物に置く。
+# Python を入れられない PC 向け。公開リリースではなく、GitHub にログインした人だけが
+# Actions の実行結果ページ（Artifacts 欄）からダウンロードできる。
+
+on:
+  push:
+    branches: [main, 'claude/**']
+    paths:
+      - 'whisper_gui_*.py'
+      - '*.spec'
+      - 'requirements.txt'
+      - 'tools/download_model.py'
+      - '.github/workflows/build-exe.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - spec: 文字起こしツール_会議録音_fw.spec
+            dist: 会議録音ツール
+            artifact: rock-on-mj-meeting
+          - spec: 文字起こしツール_fw.spec
+            dist: 文字起こしツール
+            artifact: rock-on-mj-fw
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - name: Install packages
+        run: python -m pip install -r requirements.txt
+
+      - name: Cache model
+        uses: actions/cache@v4
+        with:
+          path: models/large-v3-turbo
+          key: model-large-v3-turbo-v1
+      - name: Download model
+        run: python tools/download_model.py large-v3-turbo
+
+      - name: Build
+        run: python -m PyInstaller --noconfirm ${{ matrix.spec }}
+
+      - name: Bundle model
+        run: |
+          $dest = "dist/${{ matrix.dist }}/models/large-v3-turbo"
+          New-Item -ItemType Directory -Force $dest | Out-Null
+          Copy-Item models/large-v3-turbo/* $dest -Include *.bin, *.json, *.txt
+          # 配布物の破損チェック用（アプリが起動時に model.bin と照合する）
+          python -c "import zlib,sys; c=0; f=open(sys.argv[1],'rb'); [c:=zlib.crc32(b,c) for b in iter(lambda: f.read(1<<22), b'')]; open(sys.argv[2],'w').write(f'{c & 0xFFFFFFFF:08x}')" "$dest/model.bin" "$dest/model.crc32"
+          Get-Content "$dest/model.crc32"
+          Copy-Item LICENSE "dist/${{ matrix.dist }}/"
+          Get-ChildItem "dist/${{ matrix.dist }}" | Format-Table Name, Length
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: dist/${{ matrix.dist }}
+          compression-level: 1   # model.bin はほぼ縮まないので速さ優先
+          retention-days: 30

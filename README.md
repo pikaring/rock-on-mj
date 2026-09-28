@@ -142,6 +142,23 @@ SEHで処理されて実害が無い。faulthandlerが報告するので紛ら�
 なお exe は UPX 圧縮していない（セキュリティ対策ソフトの誤検知と、
 ネイティブDLLの破損を避けるため）。
 
+## EXE を取得する（Python を入れられないPC向け）
+
+GitHub Actions（`build-exe` ワークフロー）が Windows 用の EXE をビルドし、
+モデル（large-v3-turbo）を同梱して成果物に置きます。**GitHub にログインした状態で**
+取得します。
+
+1. リポジトリの **Actions** タブ → **build-exe** → 最新の成功した実行（緑のチェック）を開く
+2. 下部の **Artifacts** から取得（保存期間30日）
+   - `rock-on-mj-meeting` … 会議録音版（ファイルの文字起こしもできる。**通常はこちら**）
+   - `rock-on-mj-fw` … ファイル文字起こし版
+3. ZIP を右クリック →「プロパティ」→「許可する」にチェックしてから展開し、
+   中の `会議録音ツール.exe`（または `文字起こしツール.exe`）を起動
+
+ZIP は約2GB（うちモデルが1.6GB）。フォルダごと使い、`_internal` と `models` を
+EXE と同じ場所に置いたままにしてください。対象のソースを push するか、
+Actions 画面の「Run workflow」で作り直せます。
+
 ## かんたんセットアップ（Windows）
 
 リポジトリを取得（または ZIP を展開）したフォルダで **`setup.bat` をダブルクリック**します。
@@ -214,6 +231,7 @@ whisper_gui_meeting.py          # 会議録音版 本体（fw版＋録音機能�
 requirements.txt                # 依存パッケージ（ctranslate2 は 4.7.2 固定）
 setup.bat / tools/setup.ps1     # かんたんセットアップ（venv作成・パッケージ・モデル取得）
 run_fw.bat / run_meeting.bat    # ビルドせずに起動するランチャー
+.github/workflows/build-exe.yml # EXE をビルドして Actions の成果物に置く
 tools/download_model.py         # モデルを models/<名前>/ に取得
 ```
 
