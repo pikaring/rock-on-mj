@@ -142,26 +142,47 @@ SEHで処理されて実害が無い。faulthandlerが報告するので紛ら�
 なお exe は UPX 圧縮していない（セキュリティ対策ソフトの誤検知と、
 ネイティブDLLの破損を避けるため）。
 
+## かんたんセットアップ（Windows）
+
+リポジトリを取得（または ZIP を展開）したフォルダで **`setup.bat` をダブルクリック**します。
+
+1. Python 3.10 以降を確認（無ければ winget で Python 3.12 を入れるか尋ねます）
+2. `.venv` を作り `requirements.txt` のパッケージを入れる
+3. モデル `large-v3-turbo`（約1.6GB）を `models\large-v3-turbo\` に取得
+
+終わったら次のバッチで起動します（コンソール窓は出ません）。
+
+| バッチ | 起動するもの |
+|---|---|
+| `run_fw.bat` | ファイル文字起こし版 |
+| `run_meeting.bat` | 会議録音版 |
+
+別のモデルを使う場合は `setup.bat kotoba-whisper-v2.0` のように名前を渡します
+（`large-v3-turbo` / `kotoba-whisper-v2.0` / `large-v3` / `medium` / `small`）。
+何度実行しても、済んでいる手順は飛ばします。
+
 ## セットアップ（ソースから動かす場合）
 
 ```powershell
-py -m pip install faster-whisper "ctranslate2==4.7.2" av openpyxl python-docx soundcard pyinstaller
+py -m pip install -r requirements.txt
 ```
 
 ### モデルの取得
 
-モデル本体はリポジトリに含めていません（サイズが大きいため）。初回は faster-whisper で取得します。
+モデル本体はリポジトリに含めていません（サイズが大きいため）。次のスクリプトで
+`models/large-v3-turbo/`（`model.bin` 等を含むフォルダ）に直接取得します。
 
 ```powershell
-py -c "from faster_whisper import WhisperModel; WhisperModel('large-v3-turbo', device='cpu', compute_type='int8', download_root='models')"
+py tools\download_model.py                    # large-v3-turbo（既定）
+py tools\download_model.py kotoba-whisper-v2.0
 ```
 
-取得したモデルを `models/large-v3-turbo/`（`model.bin` 等を含むフォルダ）として配置します。
+（`WhisperModel(..., download_root='models')` で取得すると HuggingFace のキャッシュ形式
+`models/models--…/snapshots/…` になり、アプリが自動検出しないので注意。）
 
 > プロキシでSSLインスペクションを行う環境では、HuggingFaceからのダウンロードが
-> 証明書エラーで失敗することがあります。その場合は `truststore` を使うと回避できます:
-> `py -m pip install truststore` の後、ダウンロード用スクリプト冒頭で
-> `import truststore; truststore.inject_into_ssl()` を実行してから取得してください。
+> 証明書エラーで失敗することがあります。`tools/download_model.py` は `truststore` が
+> 入っていれば（`requirements.txt` に含む）Windows の証明書ストアで検証するため、そのまま通ります。
 
 ### 実行（ビルドせずに動かす）
 
@@ -190,6 +211,10 @@ whisper_gui_fw.py               # ファイル文字起こし版 本体
 whisper_gui_meeting.py          # 会議録音版 本体（fw版＋録音機能）
 文字起こしツール_fw.spec           # ファイル文字起こし版 PyInstaller spec
 文字起こしツール_会議録音_fw.spec    # 会議録音版 PyInstaller spec
+requirements.txt                # 依存パッケージ（ctranslate2 は 4.7.2 固定）
+setup.bat / tools/setup.ps1     # かんたんセットアップ（venv作成・パッケージ・モデル取得）
+run_fw.bat / run_meeting.bat    # ビルドせずに起動するランチャー
+tools/download_model.py         # モデルを models/<名前>/ に取得
 ```
 
 ## ライセンス
