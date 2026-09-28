@@ -18,6 +18,13 @@ except ImportError:
 
 os.environ.setdefault('HF_HUB_DISABLE_SYMLINKS_WARNING', '1')
 
+# 日本語を表せないコンソール（英語版Windows の cp1252 等）でも落ちないようにする
+for _s in (sys.stdout, sys.stderr):
+    try:
+        _s.reconfigure(errors='replace')
+    except Exception:
+        pass
+
 from huggingface_hub import snapshot_download  # noqa: E402
 
 REPOS = {
