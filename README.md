@@ -155,6 +155,12 @@ GitHub Actions（`build-exe` ワークフロー）が Windows 用の EXE をビ�
 3. ZIP を右クリック →「プロパティ」→「許可する」にチェックしてから展開し、
    中の `会議録音ツール.exe`（または `文字起こしツール.exe`）を起動
 
+**ウイルス対策ソフトに検知された場合**: 署名の無い PyInstaller 製 EXE は、機械学習型の検知
+（ウイルスバスター／Apex One の `TRX.XXPE…` 等）で誤検知されやすい。ビルド時にブートローダーを
+ソースから作り直し、バージョン情報を埋め込んで起こりにくくしているが、ゼロにはできない。
+組織の管理コンソールで EXE のハッシュ（SHA-1/SHA-256）を除外登録するか、
+ベンダーに誤検知として報告する。
+
 ZIP は約2GB（うちモデルが1.6GB）。フォルダごと使い、`_internal` と `models` を
 EXE と同じ場所に置いたままにしてください。対象のソースを push するか、
 Actions 画面の「Run workflow」で作り直せます。
@@ -232,6 +238,7 @@ requirements.txt                # 依存パッケージ（ctranslate2 は 4.7.2 
 setup.bat / tools/setup.ps1     # かんたんセットアップ（venv作成・パッケージ・モデル取得）
 run_fw.bat / run_meeting.bat    # ビルドせずに起動するランチャー
 .github/workflows/build-exe.yml # EXE をビルドして Actions の成果物に置く
+version_info.txt                # EXE に埋め込むバージョン情報
 tools/download_model.py         # モデルを models/<名前>/ に取得
 ```
 

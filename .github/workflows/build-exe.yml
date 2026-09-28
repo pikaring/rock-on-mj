@@ -12,6 +12,7 @@ on:
       - '*.spec'
       - 'requirements.txt'
       - 'tools/download_model.py'
+      - 'version_info.txt'
       - '.github/workflows/build-exe.yml'
   workflow_dispatch:
 
@@ -44,6 +45,21 @@ jobs:
           cache: pip
       - name: Install packages
         run: python -m pip install -r requirements.txt
+
+      # 配布版の PyInstaller ブートローダーはマルウェアにも広く使われているため、
+      # 機械学習型の検知（ウイルスバスターの TRX.XXPE 系など）で誤検知されやすい。
+      # 同じ版をソースから自前でビルドし直して差し替える。
+      - name: Rebuild PyInstaller bootloader from source
+        run: |
+          $ver = python -c "import PyInstaller; print(PyInstaller.__version__)"
+          git clone --depth 1 --branch "v$ver" https://github.com/pyinstaller/pyinstaller.git "$env:RUNNER_TEMP/pyinstaller"
+          Push-Location "$env:RUNNER_TEMP/pyinstaller/bootloader"
+          python ./waf all --target-arch=64bit
+          if ($LASTEXITCODE -ne 0) { throw 'bootloader build failed' }
+          Pop-Location
+          python -m pip install --no-deps --force-reinstall "$env:RUNNER_TEMP/pyinstaller"
+          $bl = python -c "import PyInstaller, os; print(os.path.join(os.path.dirname(PyInstaller.__file__), 'bootloader', 'Windows-64bit-intel'))"
+          Get-FileHash "$bl/runw.exe" | Format-List Hash, Path
 
       - name: Cache model
         uses: actions/cache@v4
