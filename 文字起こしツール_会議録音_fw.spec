@@ -49,6 +49,7 @@ exe = EXE(
     upx_exclude=[],
     console=False,
     icon='rock_on_mj.ico',
+    version='version_info.txt',   # 発行元・製品名（誤検知を減らすため）
     disable_windowed_traceback=False,
     argv_emulation=False,
     target_arch=None,

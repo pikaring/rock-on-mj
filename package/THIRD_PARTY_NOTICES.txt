@@ -1,0 +1,55 @@
+﻿THIRD PARTY NOTICES / 第三者ソフトウェアのライセンス表示
+==========================================================
+
+この配布物（ROCK ON MJ のビルド済み版）には、以下の第三者ソフトウェアおよび
+学習済みモデルが含まれています。各ライセンスの本文は、_internal フォルダ内の
+各パッケージのディレクトリ（*.dist-info\licenses 等）に同梱されています。
+
+This package bundles the following third-party software and model weights.
+Full license texts are included under the _internal folder (*.dist-info/licenses etc.).
+
+----------------------------------------------------------------------
+■ Whisper large-v3-turbo（音声認識モデル / model weights）
+  OpenAI — MIT License
+  https://huggingface.co/openai/whisper-large-v3-turbo
+  CTranslate2 形式（int8）に変換して models\large-v3-turbo に同梱。
+
+■ faster-whisper — MIT License
+  https://github.com/SYSTRAN/faster-whisper
+
+■ CTranslate2 — MIT License
+  https://github.com/OpenNMT/CTranslate2
+  Intel oneAPI Math Kernel Library（ctranslate2.dll に静的リンク）を含む。
+  Intel Simplified Software License に基づき再頒布。
+  https://www.intel.com/content/www/us/en/developer/articles/license/onemkl-license-faq.html
+
+■ FFmpeg（PyAV に同梱の DLL 群: _internal\av.libs 等）
+  GNU Lesser General Public License (LGPL) v2.1 以降
+  https://ffmpeg.org/legal.html
+  ソースコード: https://ffmpeg.org/download.html
+  PyAV 用のビルド手順: https://github.com/PyAV-Org/pyav-ffmpeg
+  FFmpeg は独立した DLL として同梱しており、利用者が差し替えることができます。
+
+■ PyAV — BSD 3-Clause License
+  https://github.com/PyAV-Org/PyAV
+
+■ ONNX Runtime — MIT License
+  https://github.com/microsoft/onnxruntime
+
+■ Silero VAD（faster-whisper に同梱の音声区間検出モデル）— MIT License
+  https://github.com/snakers4/silero-vad
+
+■ tokenizers / huggingface_hub — Apache License 2.0
+  https://github.com/huggingface/tokenizers
+  https://github.com/huggingface/huggingface_hub
+
+■ NumPy — BSD 3-Clause License    https://numpy.org/
+■ tqdm — MPL-2.0 AND MIT          https://github.com/tqdm/tqdm
+■ openpyxl — MIT License          https://foss.heptapod.net/openpyxl/openpyxl
+■ python-docx — MIT License       https://github.com/python-openxml/python-docx
+■ lxml — BSD 3-Clause License     https://lxml.de/
+■ SoundCard — BSD 3-Clause License（会議録音版のみ） https://github.com/bastibe/SoundCard
+■ cffi — MIT License              https://github.com/python-cffi/cffi
+■ Python 3.12 — Python Software Foundation License  https://www.python.org/
+■ PyInstaller ブートローダー — GPL v2 with bootloader exception
+  https://github.com/pyinstaller/pyinstaller

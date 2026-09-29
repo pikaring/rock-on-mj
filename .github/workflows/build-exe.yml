@@ -1,0 +1,175 @@
+name: build-exe
+
+# Windows 用の EXE（PyInstaller onedir）をビルドし、モデル同梱の ZIP にする。
+# Python を入れられない・ビルドできない PC 向け。
+#   - 通常の push: Actions の成果物（ログインした人だけが取得、30日）
+#   - main への push: version_info.txt の版（ProductVersion）のリリースがまだ無ければ、
+#     v<版> として GitHub Releases に公開（紹介ページの「本体をダウンロードする」）。
+#     新しい版を出すときは version_info.txt の版番号を上げて main に入れる。
+
+on:
+  push:
+    branches: [main, 'claude/**']
+    paths:
+      - 'whisper_gui_*.py'
+      - '*.spec'
+      - 'requirements.txt'
+      - 'tools/download_model.py'
+      - 'version_info.txt'
+      - 'package/**'
+      - '.github/workflows/build-exe.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  # 同梱するモデルを int8 に変換して作る（model.bin 776MB）。
+  # HuggingFace の faster-whisper 版は float16（1.6GB）で、ZIPが倍になるうえ、
+  # README のメモリ実測（ピークコミット約1.9GB）も int8 版で測ったものなので揃える。
+  model:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cache model
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: large-v3-turbo
+          key: model-large-v3-turbo-int8-ct2-4.7.2-v1
+      - uses: actions/setup-python@v5
+        if: steps.cache.outputs.cache-hit != 'true'
+        with:
+          python-version: '3.12'
+      - name: Convert openai/whisper-large-v3-turbo to CTranslate2 int8
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu torch
+          python -m pip install transformers "ctranslate2==4.7.2"
+          ct2-transformers-converter --model openai/whisper-large-v3-turbo --output_dir large-v3-turbo \
+            --quantization int8 --copy_files tokenizer.json preprocessor_config.json
+      - name: Checksum
+        run: |
+          ls -l large-v3-turbo
+          # 配布物の破損チェック用（アプリが起動時に model.bin と照合する）
+          python3 -c "import zlib,sys; c=0; f=open(sys.argv[1],'rb'); [c:=zlib.crc32(b,c) for b in iter(lambda: f.read(1<<22), b'')]; open(sys.argv[2],'w').write(f'{c & 0xFFFFFFFF:08x}')" large-v3-turbo/model.bin large-v3-turbo/model.crc32
+          cat large-v3-turbo/model.crc32
+      - uses: actions/upload-artifact@v4
+        with:
+          name: model-large-v3-turbo
+          path: large-v3-turbo
+          compression-level: 0
+          retention-days: 1
+
+  build:
+    needs: model
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - spec: 文字起こしツール_会議録音_fw.spec
+            dist: 会議録音ツール
+            artifact: rock-on-mj-meeting
+          - spec: 文字起こしツール_fw.spec
+            dist: 文字起こしツール
+            artifact: rock-on-mj-fw
+    defaults:
+      run:
+        shell: pwsh
+    env:
+      PYTHONIOENCODING: utf-8   # ランナーは英語版Windows（cp1252）で日本語を出力できないため
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - name: Install packages
+        run: python -m pip install -r requirements.txt
+
+      # 配布版の PyInstaller ブートローダーはマルウェアにも広く使われているため、
+      # 機械学習型の検知（ウイルスバスターの TRX.XXPE 系など）で誤検知されやすい。
+      # 同じ版をソースから自前でビルドし直して差し替える。
+      - name: Rebuild PyInstaller bootloader from source
+        run: |
+          $ver = python -c "import PyInstaller; print(PyInstaller.__version__)"
+          git clone --depth 1 --branch "v$ver" https://github.com/pyinstaller/pyinstaller.git "$env:RUNNER_TEMP/pyinstaller"
+          Push-Location "$env:RUNNER_TEMP/pyinstaller/bootloader"
+          python ./waf all --target-arch=64bit
+          if ($LASTEXITCODE -ne 0) { throw 'bootloader build failed' }
+          Pop-Location
+          python -m pip install --no-deps --force-reinstall "$env:RUNNER_TEMP/pyinstaller"
+          $bl = python -c "import PyInstaller, os; print(os.path.join(os.path.dirname(PyInstaller.__file__), 'bootloader', 'Windows-64bit-intel'))"
+          Get-FileHash "$bl/runw.exe" | Format-List Hash, Path
+
+      - name: Build
+        run: python -m PyInstaller --noconfirm ${{ matrix.spec }}
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: model-large-v3-turbo
+          path: dist/${{ matrix.dist }}/models/large-v3-turbo
+
+      - name: Make ZIP
+        run: |
+          $d = "dist/${{ matrix.dist }}"
+          Copy-Item LICENSE, package/* $d
+          Get-ChildItem $d, "$d/models/large-v3-turbo" | Format-Table Name, Length
+          # Python の zipfile は日本語のファイル名に UTF-8 フラグを立てるので、Windows の展開で化けない
+          python -c "import os,sys,zipfile; src,top,out=sys.argv[1:]; z=zipfile.ZipFile(out,'w',zipfile.ZIP_DEFLATED,compresslevel=6); [z.write(os.path.join(r,f), os.path.join(top, os.path.relpath(os.path.join(r,f),src))) for r,_,fs in os.walk(src) for f in fs]; z.close()" $d ${{ matrix.artifact }} "${{ matrix.artifact }}.zip"
+          Get-Item "${{ matrix.artifact }}.zip" | Format-List Name, Length
+          Get-FileHash "$d/${{ matrix.dist }}.exe", "${{ matrix.artifact }}.zip" | Format-List Algorithm, Hash, Path
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: ${{ matrix.artifact }}.zip
+          compression-level: 0   # すでに ZIP
+          retention-days: 30
+
+  release:
+    if: github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Decide version
+        id: ver
+        run: |
+          ver=$(grep -oP "ProductVersion', '\K[0-9]+\.[0-9]+\.[0-9]+" version_info.txt)
+          echo "tag=v$ver" >> "$GITHUB_OUTPUT"
+          if gh release view "v$ver" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "v$ver は公開済みのため、リリースしない（新しい版は version_info.txt の版番号を上げる）"
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/download-artifact@v4
+        if: steps.ver.outputs.exists != 'true'
+        with:
+          pattern: rock-on-mj-*
+          merge-multiple: true
+      - name: Publish release
+        if: steps.ver.outputs.exists != 'true'
+        env:
+          TAG: ${{ steps.ver.outputs.tag }}
+        run: |
+          ls -l *.zip
+          sha256sum *.zip > SHA256SUMS.txt
+          cat > notes.md <<'EOF'
+          Windows 10 / 11（64bit）用のビルド済み版です。音声認識モデル（large-v3-turbo・int8）を同梱しています。
+          ZIP を展開して、中の EXE を起動するだけで使えます（Python・ビルドは不要）。
+
+          | ファイル | 内容 |
+          |---|---|
+          | `rock-on-mj-meeting.zip` | 会議録音版（Web会議の録音＋ファイルの文字起こし）。**通常はこちら** |
+          | `rock-on-mj-fw.zip` | ファイル文字起こし版 |
+
+          - コード署名をしていないため、初回起動時に SmartScreen の警告が出ます（「詳細情報」→「実行」）。
+          - ウイルス対策ソフトに誤検知されることがあります。ソースと、この ZIP を作った手順はすべてこのリポジトリで公開しています（`.github/workflows/build-exe.yml`）。
+          - 同梱している第三者ソフトウェアのライセンスは、ZIP 内の `THIRD_PARTY_NOTICES.txt` を参照してください。
+          EOF
+          gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "ROCK ON MJ $TAG" \
+            --notes-file notes.md rock-on-mj-meeting.zip rock-on-mj-fw.zip SHA256SUMS.txt
