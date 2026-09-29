@@ -47,6 +47,8 @@
     "priceCurrency": "JPY"
   },
   "license": "https://opensource.org/licenses/MIT",
+  "downloadUrl": "https://github.com/pikaring/rock-on-mj/releases/latest/download/rock-on-mj-meeting.zip",
+  "fileSize": "1GB",
   "author": {
     "@type": "Person",
     "name": "pikaring",
@@ -82,10 +84,10 @@
         <p class="lead">Web会議の音声をそのまま録音して、終わったら文字起こし。
           インターネットにつながっていなくても動きます。音声も文字も、PCの外には出ません。</p>
         <div class="hero-actions">
-          <a class="btn btn-main" href="https://github.com/pikaring/rock-on-mj">GitHubで見る</a>
-          <a class="btn btn-sub" href="#build">ビルド手順</a>
+          <a class="btn btn-main" href="https://github.com/pikaring/rock-on-mj/releases/latest/download/rock-on-mj-meeting.zip">本体をダウンロードする</a>
+          <a class="btn btn-sub" href="https://github.com/pikaring/rock-on-mj">GitHubで見る</a>
         </div>
-        <p class="hero-note">Windows 10 / 11（64bit）・メモリ8GB以上を推奨 ／ 実行ファイルは配布していません（各自ビルド）</p>
+        <p class="hero-note">Windows 10 / 11（64bit）・メモリ8GB以上を推奨 ／ ZIP 約1GB・モデル同梱で、展開してすぐ使えます（<a href="#build">使いかた</a>）</p>
       </div>
 
       <div class="mock" aria-hidden="true">
@@ -261,8 +263,43 @@
       <div class="sec-head">
         <p class="eyebrow">03 — GET STARTED</p>
         <h2>使いはじめる。</h2>
-        <p>ビルド済みの実行ファイルは配布していません。Python が入っていれば、
-          3つの手順で自分のPC用に作れます。</p>
+        <p>ビルド済みの本体を配布しています。Python もビルドも不要で、
+          ダウンロードして展開するだけで使えます。</p>
+      </div>
+
+      <div class="steps">
+        <div class="step">
+          <div class="n">1</div>
+          <h3>ダウンロードする</h3>
+          <p><a href="https://github.com/pikaring/rock-on-mj/releases/latest/download/rock-on-mj-meeting.zip">rock-on-mj-meeting.zip</a>（約1GB）を保存します。
+            音声認識のモデルも入っています。</p>
+        </div>
+        <div class="step">
+          <div class="n">2</div>
+          <h3>ブロックを解除して展開</h3>
+          <p>ZIPを右クリック →「プロパティ」→「許可する」にチェックしてから、
+            「すべて展開」します。</p>
+        </div>
+        <div class="step">
+          <div class="n">3</div>
+          <h3>起動する</h3>
+          <p>中の <code>会議録音ツール.exe</code> をダブルクリック。
+            初回だけ、起動に1〜2分かかります。</p>
+        </div>
+      </div>
+
+      <div class="hero-actions">
+        <a class="btn btn-main" href="https://github.com/pikaring/rock-on-mj/releases/latest/download/rock-on-mj-meeting.zip">本体をダウンロードする</a>
+        <a class="btn btn-sub" href="https://github.com/pikaring/rock-on-mj/releases">過去の版・ファイル文字起こし版</a>
+      </div>
+
+      <p class="note"><b>コード署名をしていないため、初回起動時に SmartScreen の警告が出ます。</b>
+        「詳細情報」→「実行」で起動できます。フォルダの中身（<code>_internal</code>・<code>models</code>）は
+        EXE と同じ場所に置いたまま使ってください。</p>
+
+      <div class="sec-head sub-head">
+        <h3>自分でビルドする場合</h3>
+        <p>ソースから作ることもできます。Python が入っていれば、3つの手順です。</p>
       </div>
 
       <div class="steps">
@@ -274,7 +311,7 @@
         <div class="step">
           <div class="n">2</div>
           <h3>モデルを取得する</h3>
-          <p>音声認識のモデル（約776MB）を <code>models/</code> に置きます。</p>
+          <p>音声認識のモデル（約1.6GB）を <code>models/</code> に置きます。</p>
         </div>
         <div class="step">
           <div class="n">3</div>
@@ -283,11 +320,11 @@
         </div>
       </div>
 
-<pre><span class="c"># 1. 依存パッケージ（ctranslate2 は 4.7.2 に固定してください）</span>
-py -m pip install faster-whisper "ctranslate2==4.7.2" av openpyxl python-docx soundcard pyinstaller
+<pre><span class="c"># 1. 依存パッケージ（ctranslate2 は 4.7.2 に固定済み）</span>
+py -m pip install -r requirements.txt
 
 <span class="c"># 2. モデルの取得（models/large-v3-turbo/ に置く）</span>
-py -c "from faster_whisper import WhisperModel; WhisperModel('large-v3-turbo', device='cpu', compute_type='int8', download_root='models')"
+py tools\download_model.py
 
 <span class="c"># 3. ビルド</span>
 py -m PyInstaller 文字起こしツール_会議録音_fw.spec</pre>
@@ -337,9 +374,11 @@ py -m PyInstaller 文字起こしツール_会議録音_fw.spec</pre>
           文字起こし中は1〜2GBほど使うため、他のアプリを閉じておくと安定します。</p>
       </details>
       <details>
-        <summary>実行ファイルを配布しないのはなぜですか？</summary>
-        <p>コード署名をしていないため、配布した実行ファイルは警告の対象になります。
-          自分のPCでビルドしたものであれば、その心配がありません。手順は上のとおりです。</p>
+        <summary>ウイルス対策ソフトに検知されました。</summary>
+        <p>コード署名をしていない実行ファイルは、AIによる推定型の検知で誤検知されることがあります。
+          配布しているZIPは、GitHub上で公開しているソースと手順（<code>.github/workflows/build-exe.yml</code>）から
+          自動でビルドしたものです。組織で管理しているPCの場合は、情報システム担当に除外登録を相談するか、
+          上の「自分でビルドする場合」の手順で作ってください。</p>
       </details>
     </div>
   </section>
@@ -348,9 +387,10 @@ py -m PyInstaller 文字起こしツール_会議録音_fw.spec</pre>
     <div class="wrap">
       <p class="eyebrow" style="justify-content:center">READY WHEN YOU ARE</p>
       <h2>次の会議から、ROCK ON。</h2>
-      <p style="margin-top:14px">ソースコードとビルド手順は、すべてGitHubで公開しています。</p>
+      <p style="margin-top:14px">ダウンロードして、すぐ使えます。ソースコードはすべてGitHubで公開しています。</p>
       <div class="hero-actions">
-        <a class="btn btn-main" href="https://github.com/pikaring/rock-on-mj">GitHubで見る</a>
+        <a class="btn btn-main" href="https://github.com/pikaring/rock-on-mj/releases/latest/download/rock-on-mj-meeting.zip">本体をダウンロードする</a>
+        <a class="btn btn-sub" href="https://github.com/pikaring/rock-on-mj">GitHubで見る</a>
       </div>
       <p class="hero-note">MIT License · Windows 10 / 11（64bit）</p>
     </div>

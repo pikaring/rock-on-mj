@@ -142,18 +142,19 @@ SEHで処理されて実害が無い。faulthandlerが報告するので紛ら�
 なお exe は UPX 圧縮していない（セキュリティ対策ソフトの誤検知と、
 ネイティブDLLの破損を避けるため）。
 
-## EXE を取得する（Python を入れられないPC向け）
+## ビルド済み版をダウンロードする（Python もビルドも不要）
 
-GitHub Actions（`build-exe` ワークフロー）が Windows 用の EXE をビルドし、
-モデル（large-v3-turbo）を同梱して成果物に置きます。**GitHub にログインした状態で**
-取得します。
+**[rock-on-mj-meeting.zip をダウンロード](https://github.com/pikaring/rock-on-mj/releases/latest/download/rock-on-mj-meeting.zip)**
+（[Releases](https://github.com/pikaring/rock-on-mj/releases) に全ファイル）
 
-1. リポジトリの **Actions** タブ → **build-exe** → 最新の成功した実行（緑のチェック）を開く
-2. 下部の **Artifacts** から取得（保存期間30日）
-   - `rock-on-mj-meeting` … 会議録音版（ファイルの文字起こしもできる。**通常はこちら**）
-   - `rock-on-mj-fw` … ファイル文字起こし版
-3. ZIP を右クリック →「プロパティ」→「許可する」にチェックしてから展開し、
-   中の `会議録音ツール.exe`（または `文字起こしツール.exe`）を起動
+| ファイル | 内容 |
+|---|---|
+| `rock-on-mj-meeting.zip` | 会議録音版（Web会議の録音＋ファイルの文字起こし）。**通常はこちら** |
+| `rock-on-mj-fw.zip` | ファイル文字起こし版 |
+
+音声認識モデル（large-v3-turbo・int8、776MB）を同梱しています。ZIP を右クリック →
+「プロパティ」→「許可する」にチェックしてから展開し、中の `会議録音ツール.exe` を起動します。
+フォルダの中身（`_internal`・`models`）は EXE と同じ場所に置いたまま使ってください。
 
 **ウイルス対策ソフトに検知された場合**: 署名の無い PyInstaller 製 EXE は、機械学習型の検知
 （ウイルスバスター／Apex One の `TRX.XXPE…` 等）で誤検知されやすい。ビルド時にブートローダーを
@@ -161,9 +162,20 @@ GitHub Actions（`build-exe` ワークフロー）が Windows 用の EXE をビ�
 組織の管理コンソールで EXE のハッシュ（SHA-1/SHA-256）を除外登録するか、
 ベンダーに誤検知として報告する。
 
-ZIP は約2GB（うちモデルが1.6GB）。フォルダごと使い、`_internal` と `models` を
-EXE と同じ場所に置いたままにしてください。対象のソースを push するか、
-Actions 画面の「Run workflow」で作り直せます。
+### 配布物の作り方（メンテナ向け）
+
+`.github/workflows/build-exe.yml` が自動でビルドする。
+
+- **`v*` タグを push すると Releases に公開**される（紹介ページのボタンは常に最新版を指す）
+  ```
+  git tag v1.0.1
+  git push origin v1.0.1
+  ```
+- 通常の push（ソース・spec 等の変更時）では Actions の成果物にだけ置く（ログインが必要、30日）
+- 同梱モデルは `openai/whisper-large-v3-turbo` を CI で CTranslate2 の int8 に変換したもの
+  （HuggingFace の faster-whisper 版は float16 で1.6GB あり、ZIP が倍になるため）。
+  `model.crc32` も同梱する
+- ZIP には `package/` の `はじめにお読みください.txt` と `THIRD_PARTY_NOTICES.txt`、`LICENSE` を入れる
 
 ## かんたんセットアップ（Windows）
 
@@ -239,6 +251,7 @@ setup.bat / tools/setup.ps1     # かんたんセットアップ（venv作成・
 run_fw.bat / run_meeting.bat    # ビルドせずに起動するランチャー
 .github/workflows/build-exe.yml # EXE をビルドして Actions の成果物に置く
 version_info.txt                # EXE に埋め込むバージョン情報
+package/                        # 配布ZIPに同梱する説明書・第三者ライセンス表示
 tools/download_model.py         # モデルを models/<名前>/ に取得
 ```
 
@@ -247,11 +260,11 @@ tools/download_model.py         # モデルを models/<名前>/ に取得
 このリポジトリのソース（`whisper_gui_*.py`・`*.spec`・`make_icon.py`）は
 **MIT License** です（[LICENSE](LICENSE)）。
 
-**ビルド済みの実行ファイルは配布していません。** 上の「ビルド（配布用 exe の作成）」の
-手順で各自作成してください。モデルも各自で取得します（同「モデルの取得」）。
+ビルド済み版は [Releases](https://github.com/pikaring/rock-on-mj/releases) で配布しています
+（上の「ビルド済み版をダウンロードする」）。自分でビルドすることもできます。
 
 ビルドした実行ファイルには第三者のライブラリが同梱されます。再配布する場合は
-それぞれのライセンス表示が必要です。主なものは次のとおり（`_internal` 配下に
+それぞれのライセンス表示が必要です（配布版には `package/THIRD_PARTY_NOTICES.txt` を同梱）。主なものは次のとおり（`_internal` 配下に
 各パッケージのライセンス本文が同梱されています）。
 
 | 同梱物 | ライセンス |

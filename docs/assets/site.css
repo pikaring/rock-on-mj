@@ -175,6 +175,9 @@ pre {
 }
 pre .c { color: #9a8f89; }
 .note { font-size: 13.5px; color: var(--muted); margin-top: 16px; }
+#build .hero-actions { margin: 0 0 8px; }
+.sub-head { margin: 64px 0 28px; }
+.sub-head h3 { font-size: 22px; }
 
 /* ---- FAQ ---- */
 .faq { border-top: 1px solid var(--line); }
