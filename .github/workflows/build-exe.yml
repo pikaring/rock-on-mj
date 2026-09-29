@@ -3,13 +3,13 @@ name: build-exe
 # Windows 用の EXE（PyInstaller onedir）をビルドし、モデル同梱の ZIP にする。
 # Python を入れられない・ビルドできない PC 向け。
 #   - 通常の push: Actions の成果物（ログインした人だけが取得、30日）
-#   - v* タグの push: 加えて GitHub Releases に公開（紹介ページの「本体をダウンロードする」）
-#       git tag v1.0.1 && git push origin v1.0.1
+#   - main への push: version_info.txt の版（ProductVersion）のリリースがまだ無ければ、
+#     v<版> として GitHub Releases に公開（紹介ページの「本体をダウンロードする」）。
+#     新しい版を出すときは version_info.txt の版番号を上げて main に入れる。
 
 on:
   push:
     branches: [main, 'claude/**']
-    tags: ['v*']
     paths:
       - 'whisper_gui_*.py'
       - '*.spec'
@@ -128,19 +128,33 @@ jobs:
           retention-days: 30
 
   release:
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: github.ref == 'refs/heads/main'
     needs: build
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
     steps:
+      - uses: actions/checkout@v4
+      - name: Decide version
+        id: ver
+        run: |
+          ver=$(grep -oP "ProductVersion', '\K[0-9]+\.[0-9]+\.[0-9]+" version_info.txt)
+          echo "tag=v$ver" >> "$GITHUB_OUTPUT"
+          if gh release view "v$ver" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "v$ver は公開済みのため、リリースしない（新しい版は version_info.txt の版番号を上げる）"
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          fi
       - uses: actions/download-artifact@v4
+        if: steps.ver.outputs.exists != 'true'
         with:
           pattern: rock-on-mj-*
           merge-multiple: true
       - name: Publish release
+        if: steps.ver.outputs.exists != 'true'
         env:
-          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.ver.outputs.tag }}
         run: |
           ls -l *.zip
           sha256sum *.zip > SHA256SUMS.txt
@@ -157,5 +171,5 @@ jobs:
           - ウイルス対策ソフトに誤検知されることがあります。ソースと、この ZIP を作った手順はすべてこのリポジトリで公開しています（`.github/workflows/build-exe.yml`）。
           - 同梱している第三者ソフトウェアのライセンスは、ZIP 内の `THIRD_PARTY_NOTICES.txt` を参照してください。
           EOF
-          gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --title "ROCK ON MJ $GITHUB_REF_NAME" \
+          gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "ROCK ON MJ $TAG" \
             --notes-file notes.md rock-on-mj-meeting.zip rock-on-mj-fw.zip SHA256SUMS.txt

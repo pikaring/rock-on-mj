@@ -166,11 +166,10 @@ SEHで処理されて実害が無い。faulthandlerが報告するので紛ら�
 
 `.github/workflows/build-exe.yml` が自動でビルドする。
 
-- **`v*` タグを push すると Releases に公開**される（紹介ページのボタンは常に最新版を指す）
-  ```
-  git tag v1.0.1
-  git push origin v1.0.1
-  ```
+- **main に入ると Releases に公開**される。版は `version_info.txt` の `ProductVersion`
+  （`1.0.0.0` → `v1.0.0`）で、その版のリリースがまだ無いときだけ作る。
+  新しい版を出すときは `version_info.txt` の `filevers`・`prodvers`・`FileVersion`・`ProductVersion`
+  を上げて main に入れる（紹介ページのボタンは常に最新版を指す）
 - 通常の push（ソース・spec 等の変更時）では Actions の成果物にだけ置く（ログインが必要、30日）
 - 同梱モデルは `openai/whisper-large-v3-turbo` を CI で CTranslate2 の int8 に変換したもの
   （HuggingFace の faster-whisper 版は float16 で1.6GB あり、ZIP が倍になるため）。
