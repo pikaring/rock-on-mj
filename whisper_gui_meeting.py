@@ -675,16 +675,25 @@ def run_worker(job_path):
                          cpu_threads=threads, num_workers=1)
     _emit('log', m='  読み込み完了')
 
+    # 小さい声が無音として捨てられないよう，音量を補正し，無音除去の強さを選ぶ
+    _emit('status', m='音声を解析中...')
+    _emit('log', m='>>> 音声の解析...')
+    import audio_prep
+    audio, vad_parameters, speech_mask = audio_prep.prepare(
+        audio_path, log=lambda m: _emit('log', m=m))
+
     _emit('status', m='文字起こし中（しばらくかかります）...')
     _emit('log', m='>>> 文字起こし開始...')
     start = time.time()
+    options = dict(language='ja', beam_size=5,
+                   initial_prompt=job['prompt'],
+                   condition_on_previous_text=False,
+                   no_repeat_ngram_size=3)
     segments, info = model.transcribe(
-        audio_path, language='ja', beam_size=5,
-        initial_prompt=job['prompt'],
-        vad_filter=True,
-        vad_parameters=dict(min_silence_duration_ms=500),
-        condition_on_previous_text=False,
-        no_repeat_ngram_size=3)
+        audio,
+        vad_filter=vad_parameters is not None,
+        vad_parameters=vad_parameters,
+        **options)
 
     duration = info.duration or 0
     _emit('log', m=f'  音声長: {int(duration // 60)}分{int(duration % 60)}秒')
@@ -692,6 +701,8 @@ def run_worker(job_path):
 
     segs = []
     for seg in segments:
+        if audio_prep.is_hallucination(seg.text):
+            continue   # 雑音から出る決まり文句（「ご視聴ありがとうございました」等）
         segs.append(seg)
         _emit('log', m=seg.text.strip())
         if duration > 0 and seg.end > 0:
@@ -700,6 +711,13 @@ def run_worker(job_path):
             eta = elapsed * (duration - seg.end) / seg.end
             _emit('progress', v=pct)
             _emit('status', m=f'文字起こし中... {int(pct)}%  残り約{fmt_eta(eta)}')
+
+    # 雑音で1文に縮んだり飛ばされたりした所を，切り出して文字起こしし直す
+    segs = audio_prep.repair(
+        model, audio, segs, vad_parameters, speech_mask, options,
+        log=lambda m: _emit('log', m=m),
+        progress=lambda i, n: _emit('status', m=f'抜けの補正中... {i}/{n}'))
+    del audio
 
     _emit('progress', v=100)
     full_text = ''.join(s.text for s in segs)

@@ -340,17 +340,25 @@ class WhisperApp(tk.Tk):
 
             prompt = build_initial_prompt(app_base_dir())
 
-            # 文字起こし（音声の読み込み・解析はfaster-whisper内部で実行）
+            # 小さい声が無音として捨てられないよう、音量を補正し、無音除去の強さを選ぶ
+            self._set_status('音声を解析中...')
+            self.after(0, lambda: self._log('>>> 音声の解析...'))
+            import audio_prep
+            log = lambda m: self.after(0, lambda m=m: self._log(m))
+            audio, vad_parameters, speech_mask = audio_prep.prepare(audio_path, log=log)
+
             self._set_status('文字起こし中（しばらくかかります）...')
             self.after(0, lambda: self._log('>>> 文字起こし開始...'))
             start = time.time()
+            options = dict(language='ja', beam_size=5,
+                           initial_prompt=prompt,
+                           condition_on_previous_text=False,
+                           no_repeat_ngram_size=3)
             segments, info = model.transcribe(
-                audio_path, language='ja', beam_size=5,
-                initial_prompt=prompt,
-                vad_filter=True,
-                vad_parameters=dict(min_silence_duration_ms=500),
-                condition_on_previous_text=False,
-                no_repeat_ngram_size=3)
+                audio,
+                vad_filter=vad_parameters is not None,
+                vad_parameters=vad_parameters,
+                **options)
 
             duration = info.duration or 0
             self.after(0, lambda: self._log(
@@ -362,6 +370,8 @@ class WhisperApp(tk.Tk):
 
             segs = []
             for seg in segments:
+                if audio_prep.is_hallucination(seg.text):
+                    continue   # 雑音から出る決まり文句（「ご視聴ありがとうございました」等）
                 segs.append(seg)
                 self.after(0, lambda t=seg.text: self._log(t.strip()))
                 if duration > 0 and seg.end > 0:
@@ -371,6 +381,12 @@ class WhisperApp(tk.Tk):
                     self._set_progress(pct)
                     self._set_status(
                         f'文字起こし中... {int(pct)}%  残り約{fmt_eta(eta)}')
+
+            # 雑音で1文に縮んだり飛ばされたりした所を、切り出して文字起こしし直す
+            segs = audio_prep.repair(
+                model, audio, segs, vad_parameters, speech_mask, options, log=log,
+                progress=lambda i, n: self._set_status(f'抜けの補正中... {i}/{n}'))
+            del audio
 
             self._set_progress(100)
             full_text = ''.join(s.text for s in segs)

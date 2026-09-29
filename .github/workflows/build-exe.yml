@@ -12,6 +12,7 @@ on:
     branches: [main, 'claude/**']
     paths:
       - 'whisper_gui_*.py'
+      - 'audio_prep.py'
       - '*.spec'
       - 'requirements.txt'
       - 'tools/download_model.py'
