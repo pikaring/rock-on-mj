@@ -52,5 +52,5 @@
     "github_pat_[A-Za-z0-9_]{20,}"
   ],
 
-  "mirror_dir": "../mojiokoshi"
+  "mirror_dir": "../matsumotodai0925/mojiokoshi"
 }
