@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""ROCK ON MJ のアイコン（エレキギター）を生成する。
+"""録音文字起こしツール のアイコン（エレキギター）を生成する。
 
 外部の画像素材を使わず、この場で描いて .ico と確認用PNGを書き出す。
     py make_icon.py
@@ -8,7 +8,7 @@ import os
 
 from PIL import Image, ImageDraw
 
-OUT_ICO = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'rock_on_mj.ico')
+OUT_ICO = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'app_icon.ico')
 S = 1024                      # 下書きの解像度（縮小して滑らかにする）
 
 BODY = (222, 68, 54)          # ボディ（赤）

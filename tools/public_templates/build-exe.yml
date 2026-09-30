@@ -2,22 +2,12 @@ name: build-exe
 
 # Windows 用の EXE（PyInstaller onedir）をビルドし、モデル同梱の ZIP にする。
 # Python を入れられない・ビルドできない PC 向け。
-#   - 通常の push: Actions の成果物（ログインした人だけが取得、30日）
-#   - main への push: version_info.txt の版（ProductVersion）のリリースがまだ無ければ、
-#     v<版> として GitHub Releases に公開（紹介ページの「本体をダウンロードする」）。
-#     新しい版を出すときは version_info.txt の版番号を上げて main に入れる。
+#   - タグ v* を push すると、ビルドして ZIP を GitHub Releases に添付する。
+#   - 手動実行（workflow_dispatch）は Actions の成果物（30日）のみ。
 
 on:
   push:
-    branches: [main, 'claude/**']
-    paths:
-      - 'whisper_gui_*.py'
-      - '*.spec'
-      - 'requirements.txt'
-      - 'tools/download_model.py'
-      - 'version_info.txt'
-      - 'package/**'
-      - '.github/workflows/build-exe.yml'
+    tags: ['v*']
   workflow_dispatch:
 
 permissions:
@@ -128,7 +118,7 @@ jobs:
           retention-days: 30
 
   release:
-    if: github.ref == 'refs/heads/main'
+    if: startsWith(github.ref, 'refs/tags/v')
     needs: build
     runs-on: ubuntu-latest
     permissions:
@@ -136,23 +126,14 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
     steps:
-      - uses: actions/checkout@v4
       - name: Decide version
         id: ver
-        run: |
-          ver=$(grep -oP "ProductVersion', '\K[0-9]+\.[0-9]+\.[0-9]+" version_info.txt)
-          echo "tag=v$ver" >> "$GITHUB_OUTPUT"
-          if gh release view "v$ver" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
-            echo "v$ver は公開済みのため、リリースしない（新しい版は version_info.txt の版番号を上げる）"
-            echo "exists=true" >> "$GITHUB_OUTPUT"
-          fi
+        run: echo "tag=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
       - uses: actions/download-artifact@v4
-        if: steps.ver.outputs.exists != 'true'
         with:
           pattern: rokuon-mojiokoshi-tool-*
           merge-multiple: true
       - name: Publish release
-        if: steps.ver.outputs.exists != 'true'
         env:
           TAG: ${{ steps.ver.outputs.tag }}
         run: |

@@ -1,12 +1,12 @@
-# ROCK ON MJ
+# 録音文字起こしツール
 
-**録音（ROCK ON）と文字起こし（MJ）**をまとめてこなす、Windows上でローカル完結する音声文字起こしツールです。録音データを外部に送信せず、
+**録音と文字起こし**をまとめてこなす、Windows上でローカル完結する音声文字起こしツールです。録音データを外部に送信せず、
 すべてお使いのPC内で処理します。用途に応じて2つの版があります。
 
 | ソース | 用途 | ビルド後の名称 |
 |---|---|---|
 | `whisper_gui_fw.py` | 手持ちの音声ファイルを文字起こし | 文字起こしツール |
-| `whisper_gui_meeting.py` | 上記に加え、Web会議（相手の声）を録音して文字起こし | 文字起こし／会議録音ツール |
+| `whisper_gui_meeting.py` | 上記に加え、Web会議（相手の声）を録音して文字起こし | 録音文字起こしツール（会議録音版） |
 
 ## 主な機能
 
@@ -144,16 +144,16 @@ SEHで処理されて実害が無い。faulthandlerが報告するので紛ら�
 
 ## ビルド済み版をダウンロードする（Python もビルドも不要）
 
-**[rock-on-mj-meeting.zip をダウンロード](https://github.com/pikaring/rock-on-mj/releases/latest/download/rock-on-mj-meeting.zip)**
+**[rokuon-mojiokoshi-tool-meeting.zip をダウンロード](https://github.com/pikaring/rock-on-mj/releases/latest/download/rokuon-mojiokoshi-tool-meeting.zip)**
 （[Releases](https://github.com/pikaring/rock-on-mj/releases) に全ファイル）
 
 | ファイル | 内容 |
 |---|---|
-| `rock-on-mj-meeting.zip` | 会議録音版（Web会議の録音＋ファイルの文字起こし）。**通常はこちら** |
-| `rock-on-mj-fw.zip` | ファイル文字起こし版 |
+| `rokuon-mojiokoshi-tool-meeting.zip` | 会議録音版（Web会議の録音＋ファイルの文字起こし）。**通常はこちら** |
+| `rokuon-mojiokoshi-tool-fw.zip` | ファイル文字起こし版 |
 
 音声認識モデル（large-v3-turbo・int8、776MB）を同梱しています。ZIP を右クリック →
-「プロパティ」→「許可する」にチェックしてから展開し、中の `会議録音ツール.exe` を起動します。
+「プロパティ」→「許可する」にチェックしてから展開し、中の `録音文字起こしツール.exe` を起動します。
 フォルダの中身（`_internal`・`models`）は EXE と同じ場所に置いたまま使ってください。
 
 **ウイルス対策ソフトに検知された場合**: 署名の無い PyInstaller 製 EXE は、機械学習型の検知

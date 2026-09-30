@@ -174,9 +174,9 @@ def save_xlsx(path, segs, low_flags):
 class WhisperApp(tk.Tk):
     def __init__(self):
         super().__init__()
-        self.title('ROCK ON MJ  －  文字起こし')
+        self.title('録音文字起こしツール  －  文字起こし')
         try:
-            self.iconbitmap(resource_path('rock_on_mj.ico'))
+            self.iconbitmap(resource_path('app_icon.ico'))
         except Exception:
             pass
         self.resizable(False, False)
@@ -198,7 +198,7 @@ class WhisperApp(tk.Tk):
     def _build_ui(self):
         pad = dict(padx=12, pady=6)
 
-        tk.Label(self, text='🎤 ROCK ON MJ',
+        tk.Label(self, text='🎤 録音文字起こしツール',
                  font=('メイリオ', 14, 'bold'), bg='#f0f0f0'
                  ).grid(row=0, column=0, columnspan=3, pady=(14, 2))
         tk.Label(self, text='文字起こし  ローカル処理（録音データは外部送信されません）',

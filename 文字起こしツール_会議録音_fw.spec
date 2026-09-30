@@ -8,7 +8,7 @@ binaries = (
     + collect_dynamic_libs('av')
 )
 datas = (collect_data_files('faster_whisper') + collect_data_files('docx')
-         + [('rock_on_mj.ico', '.')])   # ウィンドウのアイコン用に同梱
+         + [('app_icon.ico', '.')])   # ウィンドウのアイコン用に同梱
 hiddenimports = (
     ['ctranslate2', 'onnxruntime', 'av']
     + ['docx', 'openpyxl', 'et_xmlfile', 'lxml', 'lxml.etree', 'lxml._elementpath']
@@ -40,7 +40,7 @@ exe = EXE(
     a.scripts,
     [],
     exclude_binaries=True,
-    name='会議録音ツール',
+    name='録音文字起こしツール',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -48,7 +48,7 @@ exe = EXE(
     upx=False,
     upx_exclude=[],
     console=False,
-    icon='rock_on_mj.ico',
+    icon='app_icon.ico',
     version='version_info.txt',   # 発行元・製品名（誤検知を減らすため）
     disable_windowed_traceback=False,
     argv_emulation=False,
@@ -64,5 +64,5 @@ coll = COLLECT(
     strip=False,
     upx=False,
     upx_exclude=[],
-    name='会議録音ツール',
+    name='録音文字起こしツール',
 )

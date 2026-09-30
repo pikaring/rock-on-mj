@@ -17,7 +17,7 @@ W, H = 1200, 630
 
 SITES = {
     'transcription-tool': dict(
-        name='ROCK ON MJ', assets='docs/assets',
+        name='録音文字起こしツール', assets='docs/assets',
         head=['録音して、文字起こす。', 'ぜんぶ、このPCで。'],
         tag='Web会議の録音と文字起こしを、PCの中だけで。',
         url='pikaring.github.io/rock-on-mj',

@@ -1,0 +1,57 @@
+{
+  "_comment": "配布用リポジトリへのエクスポート設定。git_email の <ID> と copyright_holder は実値に書き換えること（未設定のままだとコミットは中止される）。",
+
+  "public_owner": "matsumotodai0925",
+  "public_repo": "mojiokoshi",
+  "public_pages_url": "https://matsumotodai0925.github.io/mojiokoshi/",
+  "git_name": "matsumotodai0925",
+  "git_email": "<ID>+matsumotodai0925@users.noreply.github.com",
+  "copyright_holder": "YOUR NAME",
+
+  "source_owner": "pikaring",
+  "source_repo": "rock-on-mj",
+  "source_pages_url": "https://pikaring.github.io/rock-on-mj/",
+  "source_copyright_holder": "pikaring",
+  "holder_files": ["LICENSE", "version_info.txt"],
+  "literal_replacements": [
+    {"from": "\"name\": \"pikaring\"", "to": "\"name\": \"{copyright_holder}\""},
+    {"from": "\"url\": \"https://pikaring.github.io/\"", "to": "\"url\": \"https://github.com/{public_owner}\""}
+  ],
+
+  "workflow_template": "tools/public_templates/build-exe.yml",
+
+  "exclude_paths": [
+    "models/", "models_*/", "dist/", "build/", "_internal/",
+    "*.zip", "*.exe", ".env", ".env.*",
+    ".github/workflows/goods.yml",
+    "docs/assets/goods.json",
+    "tools/fetch_goods.py",
+    "tools/export_public.py",
+    "tools/public_export.json",
+    "tools/public_templates/",
+    "make_og.py"
+  ],
+
+  "forbidden_strings": [
+    "pikaring",
+    "redcomet",
+    "rock-on-mj",
+    "rock_on_mj",
+    "ROCK ON MJ",
+    "会議録音ツール",
+    "ride-on-qc",
+    "reach-on-sanma",
+    "G-3FCFQY4W85",
+    "script.google.com",
+    "C:\\Users\\",
+    "C:/Users/",
+    "/home/user",
+    "/Users/"
+  ],
+  "forbidden_regexes": [
+    "gh[pousr]_[A-Za-z0-9]{20,}",
+    "github_pat_[A-Za-z0-9_]{20,}"
+  ],
+
+  "mirror_dir": "../mojiokoshi"
+}

@@ -1,4 +1,4 @@
-﻿# ROCK ON MJ セットアップ（Windows）
+﻿# 録音文字起こしツール セットアップ（Windows）
 #   1. Python を確認（無ければ winget で Python 3.12 を入れるか案内）
 #   2. .venv を作り requirements.txt を入れる
 #   3. モデル（既定 large-v3-turbo）を models\ に取得
@@ -24,7 +24,7 @@ function Find-Python {
     return $null
 }
 
-Write-Host '==== ROCK ON MJ セットアップ ====' -ForegroundColor Cyan
+Write-Host '==== 録音文字起こしツール セットアップ ====' -ForegroundColor Cyan
 
 # 1. Python
 $py = Find-Python

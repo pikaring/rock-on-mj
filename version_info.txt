@@ -15,11 +15,11 @@ VSVersionInfo(
     StringFileInfo([
       StringTable('041104b0', [
         StringStruct('CompanyName', 'pikaring'),
-        StringStruct('FileDescription', 'ROCK ON MJ 録音・文字起こしツール（ローカル処理）'),
+        StringStruct('FileDescription', '録音文字起こしツール（ローカル処理）'),
         StringStruct('FileVersion', '1.0.0.0'),
-        StringStruct('InternalName', 'rock-on-mj'),
+        StringStruct('InternalName', 'rokuon-mojiokoshi-tool'),
         StringStruct('LegalCopyright', 'MIT License / https://github.com/pikaring/rock-on-mj'),
-        StringStruct('ProductName', 'ROCK ON MJ'),
+        StringStruct('ProductName', '録音文字起こしツール'),
         StringStruct('ProductVersion', '1.0.0.0')
       ])
     ]),
