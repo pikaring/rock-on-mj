@@ -10,7 +10,7 @@
 
 ## 主な機能
 
-- **AI音声認識**: [faster-whisper](https://github.com/SYSTRAN/faster-whisper)（CTranslate2）による高精度な日本語文字起こし。既定モデルは `large-v3-turbo`（int8量子化）。
+- **AI音声認識**: [faster-whisper](https://github.com/SYSTRAN/faster-whisper)（CTranslate2）による日本語文字起こし。精度は高くないため、結果は生成AIシステムで補完・校正してから使う前提。既定モデルは `large-v3-turbo`（int8量子化）。
 - **モデル自動選択**: `models/` 配下を `kotoba-whisper-v2.0 → large-v3-turbo → large-v3 → medium → small` の優先順で自動選択。
 - **幻聴（ハルシネーション）対策**: 無音・雑音区間で同じ語を繰り返す暴走を、VAD（無音区間除去）＋ `condition_on_previous_text=False` ＋ `no_repeat_ngram_size` で抑制。
 - **複数フォーマット出力**: テキスト(.txt) / 字幕(.srt) / Word(.docx) / Excel(.xlsx)。低信頼度セグメントには「※要確認」を付与（Excelは黄色塗り）。
@@ -20,6 +20,8 @@
 - **オフライン動作**: インターネット接続なしで利用可能（モデル取得時のみ通信）。
 
 > ⚠️ **Web会議を録音する際は、参加者への録音の告知・同意を必ず取得してください。**
+>
+> ⚠️ **文字起こしの精度は高くありません。** そのまま議事録などに使わず、生成AIシステムによる補完・校正を行ってください。要約する場合も、音声から直接ではなく、一度文字起こししたデータを使うことをおすすめします。このツール自体に、補完・校正・要約の機能はありません。
 
 ## 動作環境
 
