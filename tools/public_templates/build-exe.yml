@@ -58,10 +58,10 @@ jobs:
       matrix:
         include:
           - spec: 文字起こしツール_会議録音_fw.spec
-            dist: 録音文字起こしツール
+            dist: mojiokoshi
             artifact: rokuon-mojiokoshi-tool-meeting
           - spec: 文字起こしツール_fw.spec
-            dist: 文字起こしツール
+            dist: mojiokoshi-fw
             artifact: rokuon-mojiokoshi-tool-fw
     defaults:
       run:

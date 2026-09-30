@@ -201,14 +201,14 @@ def step_workflow(tree, cfg):
 
 
 def step_images(tree):
-    try:
-        from PIL import Image
-    except ImportError:
-        raise ExportError('Pillow が必要です（pip install pillow）')
     cleaned, skipped = [], []
     for full, rel in all_files(tree):
         low = rel.lower()
         if low.endswith(IMAGE_EXT):
+            try:
+                from PIL import Image
+            except ImportError:
+                raise ExportError('画像があるため Pillow が必要です（pip install pillow）')
             with Image.open(full) as im:
                 im.load()
                 had = sorted(k for k in im.info if k not in ('dpi', 'transparency'))

@@ -5,8 +5,8 @@
 
 | ソース | 用途 | ビルド後の名称 |
 |---|---|---|
-| `whisper_gui_fw.py` | 手持ちの音声ファイルを文字起こし | 文字起こしツール |
-| `whisper_gui_meeting.py` | 上記に加え、Web会議（相手の声）を録音して文字起こし | 録音文字起こしツール（会議録音版） |
+| `whisper_gui_fw.py` | 手持ちの音声ファイルを文字起こし | `mojiokoshi-fw.exe` |
+| `whisper_gui_meeting.py` | 上記に加え、Web会議（相手の声）を録音して文字起こし | `mojiokoshi.exe` |
 
 ## 主な機能
 
@@ -153,7 +153,7 @@ SEHで処理されて実害が無い。faulthandlerが報告するので紛ら�
 | `rokuon-mojiokoshi-tool-fw.zip` | ファイル文字起こし版 |
 
 音声認識モデル（large-v3-turbo・int8、776MB）を同梱しています。ZIP を右クリック →
-「プロパティ」→「許可する」にチェックしてから展開し、中の `録音文字起こしツール.exe` を起動します。
+「プロパティ」→「許可する」にチェックしてから展開し、中の `mojiokoshi.exe` を起動します。
 フォルダの中身（`_internal`・`models`）は EXE と同じ場所に置いたまま使ってください。
 
 **ウイルス対策ソフトに検知された場合**: 署名の無い PyInstaller 製 EXE は、機械学習型の検知
@@ -256,7 +256,7 @@ tools/download_model.py         # モデルを models/<名前>/ に取得
 
 ## ライセンス
 
-このリポジトリのソース（`whisper_gui_*.py`・`*.spec`・`make_icon.py`）は
+このリポジトリのソース（`whisper_gui_*.py`・`*.spec`）は
 **MIT License** です（[LICENSE](LICENSE)）。
 
 ビルド済み版は [Releases](https://github.com/pikaring/rock-on-mj/releases) で配布しています

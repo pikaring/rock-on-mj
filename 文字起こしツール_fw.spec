@@ -7,8 +7,7 @@ binaries = (
     + collect_dynamic_libs('onnxruntime')
     + collect_dynamic_libs('av')
 )
-datas = (collect_data_files('faster_whisper') + collect_data_files('docx')
-         + [('app_icon.ico', '.')])   # ウィンドウのアイコン用に同梱
+datas = (collect_data_files('faster_whisper') + collect_data_files('docx'))
 hiddenimports = (
     ['ctranslate2', 'onnxruntime', 'av']
     + ['docx', 'openpyxl', 'et_xmlfile', 'lxml', 'lxml.etree', 'lxml._elementpath']
@@ -36,14 +35,13 @@ exe = EXE(
     a.scripts,
     [],
     exclude_binaries=True,
-    name='文字起こしツール',
+    name='mojiokoshi-fw',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
     upx=False,
     upx_exclude=[],
     console=False,
-    icon='app_icon.ico',
     version='version_info.txt',   # 発行元・製品名（誤検知を減らすため）
     disable_windowed_traceback=False,
     argv_emulation=False,
@@ -59,5 +57,5 @@ coll = COLLECT(
     strip=False,
     upx=False,
     upx_exclude=[],
-    name='文字起こしツール',
+    name='mojiokoshi-fw',
 )

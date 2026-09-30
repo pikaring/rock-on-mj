@@ -28,8 +28,7 @@
     "tools/fetch_goods.py",
     "tools/export_public.py",
     "tools/public_export.json",
-    "tools/public_templates/",
-    "make_og.py"
+    "tools/public_templates/"
   ],
 
   "forbidden_strings": [

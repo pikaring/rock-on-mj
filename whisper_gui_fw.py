@@ -175,10 +175,6 @@ class WhisperApp(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title('録音文字起こしツール  －  文字起こし')
-        try:
-            self.iconbitmap(resource_path('app_icon.ico'))
-        except Exception:
-            pass
         self.resizable(False, False)
         self.configure(bg='#f0f0f0')
         self._result_text = ''
