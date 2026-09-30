@@ -253,10 +253,11 @@ def step_verify(tree, cfg):
                         hits.append('%s:%d (トークン形式: %s)' % (rel, no, r.pattern[:12]))
             if MARK_S in s or MARK_E in s:
                 hits.append('%s (EXCLUDE マーカーが残っています)' % rel)
-        else:
-            for w in words:                            # バイナリ内（UTF-8 / UTF-16LE / ASCII）
+        if s is None or b'\x00' in raw:               # バイナリ内（UTF-8 / UTF-16LE）
+            lraw = raw.lower()
+            for w in words:
                 for enc in ('utf-8', 'utf-16-le'):
-                    if w.lower().encode(enc) in raw.lower():
+                    if w.lower().encode(enc) in lraw:
                         hits.append('%s (バイナリ内: %s)' % (rel, w))
                         break
     if hits:
