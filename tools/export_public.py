@@ -213,8 +213,7 @@ def step_images(tree):
                 im.load()
                 had = sorted(k for k in im.info if k not in ('dpi', 'transparency'))
                 fmt = im.format
-                clean = Image.new(im.mode, im.size)
-                clean.putdata(list(im.getdata()))
+                clean = Image.frombytes(im.mode, im.size, im.tobytes())
                 if im.palette is not None:
                     clean.putpalette(im.getpalette())
             save_kw = {'optimize': True} if fmt in ('PNG', 'JPEG') else {}
