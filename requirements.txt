@@ -3,7 +3,9 @@
 # コミットし、メモリの少ないPCで無言で落ちる。README「ctranslate2 は 4.7.2 に固定する」参照）
 faster-whisper==1.2.1
 ctranslate2==4.7.2
-av
+# av は 18.1.0 に固定する（19.0 以降は av.open から metadata_errors が無くなり、
+# faster-whisper 1.2.1 の音声読み込みが TypeError で失敗する）
+av==18.1.0
 openpyxl
 python-docx
 soundcard            # 会議録音版のみ使用（WASAPIループバック）

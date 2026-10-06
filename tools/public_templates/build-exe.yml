@@ -76,6 +76,8 @@ jobs:
           cache: pip
       - name: Install packages
         run: python -m pip install -r requirements.txt
+      - name: Smoke test (audio decoding)
+        run: python tools/smoke_decode.py
 
       # 配布版の PyInstaller ブートローダーはマルウェアにも広く使われているため、
       # 機械学習型の検知（ウイルスバスターの TRX.XXPE 系など）で誤検知されやすい。
